@@ -15,6 +15,7 @@ import {
   Radar,
   PolarGrid,
   PolarAngleAxis,
+  Cell,
   PolarRadiusAxis,
 } from "recharts";
 import {
@@ -448,7 +449,7 @@ function ComparePage() {
                   />
                   <Bar dataKey="value" radius={[8, 8, 8, 8]} animationDuration={800}>
                     {barData.map((d) => (
-                      <cell key={d.code} />
+                      <Cell key={d.code} fill={d.tint} />
                     ))}
                   </Bar>
                 </BarChart>
