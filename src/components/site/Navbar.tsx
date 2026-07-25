@@ -3,12 +3,9 @@ import { Search, Bell } from "lucide-react";
 
 const nav = [
   { label: "Home", to: "/" },
-  { label: "Dashboard", to: "/" },
-  { label: "Compare", to: "/" },
-  { label: "Domains", to: "/" },
-  { label: "Insights", to: "/" },
-  { label: "About", to: "/" },
-];
+  { label: "Dashboard", to: "/dashboard/$domain", params: { domain: "economy" } },
+  { label: "Compare", to: "/compare" },
+] as const;
 
 export function Navbar() {
   return (
@@ -29,9 +26,9 @@ export function Navbar() {
           {nav.map((item) => (
             <Link
               key={item.label}
-              to={item.to}
+              to={item.to as string}
+              params={"params" in item ? (item.params as never) : undefined}
               className="rounded-full px-3.5 py-1.5 text-[13.5px] text-muted-foreground transition-colors hover:text-foreground [&.active]:text-foreground"
-              activeOptions={{ exact: true }}
             >
               {item.label}
             </Link>
