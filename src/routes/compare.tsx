@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
-import worldMapUrl from "@/assets/world-map.png";
+import { WorldComparisonMap } from "@/components/dashboard/WorldComparisonMap";
 
 export const Route = createFileRoute("/compare")({
   head: () => ({
@@ -43,7 +43,7 @@ export const Route = createFileRoute("/compare")({
 });
 
 /* ---------- Data ---------- */
-type CountryCode = "IN" | "US" | "CN" | "DE" | "JP" | "GB" | "BR" | "FR" | "KR" | "SG" | "ZA" | "AU";
+type CountryCode = "IN" | "US" | "CN" | "DE" | "JP" | "GB" | "BR" | "FR" | "KR" | "SG" | "ZA" | "AU" | "RU" | "IT" | "CA" | "ES" | "MX" | "ID" | "NL" | "SA" | "TR" | "CH" | "SE" | "PL" | "AR" | "BE" | "TH" | "NG" | "EG";
 type Country = {
   code: CountryCode;
   name: string;
@@ -64,6 +64,23 @@ const COUNTRIES: Country[] = [
   { code: "SG", name: "Singapore", flag: "🇸🇬", tint: "#E64848" },
   { code: "ZA", name: "South Africa", flag: "🇿🇦", tint: "#F59E0B" },
   { code: "AU", name: "Australia", flag: "🇦🇺", tint: "#0F766E" },
+  { code: "RU", name: "Russia", flag: "🇷🇺", tint: "#DC2626" },
+  { code: "IT", name: "Italy", flag: "🇮🇹", tint: "#16A34A" },
+  { code: "CA", name: "Canada", flag: "🇨🇦", tint: "#EF4444" },
+  { code: "ES", name: "Spain", flag: "🇪🇸", tint: "#EAB308" },
+  { code: "MX", name: "Mexico", flag: "🇲🇽", tint: "#15803D" },
+  { code: "ID", name: "Indonesia", flag: "🇮🇩", tint: "#B91C1C" },
+  { code: "NL", name: "Netherlands", flag: "🇳🇱", tint: "#F97316" },
+  { code: "SA", name: "Saudi Arabia", flag: "🇸🇦", tint: "#166534" },
+  { code: "TR", name: "Turkey", flag: "🇹🇷", tint: "#DC2626" },
+  { code: "CH", name: "Switzerland", flag: "🇨🇭", tint: "#EF4444" },
+  { code: "SE", name: "Sweden", flag: "🇸🇪", tint: "#0284C7" },
+  { code: "PL", name: "Poland", flag: "🇵🇱", tint: "#E11D48" },
+  { code: "AR", name: "Argentina", flag: "🇦🇷", tint: "#38BDF8" },
+  { code: "BE", name: "Belgium", flag: "🇧🇪", tint: "#EAB308" },
+  { code: "TH", name: "Thailand", flag: "🇹🇭", tint: "#1D4ED8" },
+  { code: "NG", name: "Nigeria", flag: "🇳🇬", tint: "#16A34A" },
+  { code: "EG", name: "Egypt", flag: "🇪🇬", tint: "#000000" },
 ];
 
 const METRICS = [
@@ -99,7 +116,7 @@ function valueAt(code: CountryCode, metric: MetricId, year: number) {
   return series(code, metric).find((s) => s.year === year)?.value ?? 0;
 }
 
-const COUNTRY_STORIES: Record<CountryCode, string[]> = {
+const COUNTRY_STORIES: Partial<Record<CountryCode, string[]>> = {
   IN: [
     "Rapid digitalization through public infrastructure (UPI, Aadhaar)",
     "Expanding service exports and global capability centers",
@@ -243,6 +260,15 @@ function ComparePage() {
     setPickerOpen(false);
   };
 
+  const handleMapCompare = (code: string) => {
+    // 1. Update state (keeping India and replacing others with the selected country)
+    if (code !== "IN") {
+      setSelected(["IN", code as CountryCode]);
+    }
+    // 2. Smooth scroll to dashboard
+    document.getElementById("comparison-dashboard")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const takeaways = useMemo(() => {
     const r2018 = [...selected]
       .map((c) => ({ code: c, value: valueAt(c, metric, 2018) }))
@@ -370,19 +396,10 @@ function ComparePage() {
           </Link>
         </div>
 
-        {/* Hero Header Area (No card borders around header, actual world map image as BG with blue/green gradient) */}
-        <header className="relative rounded-3xl overflow-hidden mb-8 p-8 sm:p-10 bg-gradient-to-br from-blue-500/10 via-teal-500/5 to-emerald-500/10 dark:from-blue-950/20 dark:via-teal-950/10 dark:to-emerald-950/15 border border-zinc-200/40 dark:border-zinc-800/40">
-          {/* World map image background with green/blue gradient styling */}
-          <div className="absolute inset-0 z-0 select-none pointer-events-none opacity-[0.35] dark:opacity-[0.22]">
-            <img
-              src={worldMapUrl}
-              alt=""
-              className="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal object-center"
-            />
-          </div>
-
-          <div className="relative z-10 max-w-3xl">
-            <span className="chip bg-background/60 backdrop-blur-sm"><Globe2 className="h-3.5 w-3.5 text-saffron" /> Global Storytelling</span>
+        {/* Hero Header Area */}
+        <header className="mb-8">
+          <div className="max-w-3xl">
+            <span className="chip"><Globe2 className="h-3.5 w-3.5 text-saffron" /> Global Storytelling</span>
             <h1 className="mt-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
               Compare India with the World
             </h1>
@@ -392,8 +409,11 @@ function ComparePage() {
           </div>
         </header>
 
+        {/* Interactive World Map */}
+        <WorldComparisonMap onCompare={handleMapCompare} />
+
         {/* Filters Card Shell (only maps countries & domains selectors) */}
-        <section className="relative z-10 card-surface p-4 sm:p-5 mb-8">
+        <section id="comparison-dashboard" className="relative z-10 card-surface p-4 sm:p-5 mb-8 scroll-mt-24">
           <div className="space-y-4">
             {/* Top Row: Countries */}
             <div className="flex flex-wrap items-center gap-3 border-b border-zinc-200/50 dark:border-zinc-800/60 pb-4">
