@@ -1,0 +1,11 @@
+{
+  "lastUpdated": "2026",
+  "totalDatasets": 16,
+  "sources": [
+    "WORLDBANK",
+    "UNDP",
+    "OWID",
+    "WHO",
+    "OXFORD"
+  ]
+}

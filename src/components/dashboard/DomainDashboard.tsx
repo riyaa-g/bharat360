@@ -41,8 +41,21 @@ import {
 import { Link } from "@tanstack/react-router";
 import type { Domain, DomainSlug } from "@/lib/domains";
 import { DOMAIN_LIST } from "@/lib/domains";
+import { useDataset, useStateData, useSearch } from "@/hooks/useData";
 
 /* =================== METRICS DEFINITIONS & SOURCES =================== */
+const COUNTRY_CODES: Record<string, string> = {
+  "United States": "US",
+  "China": "CN",
+  "Japan": "JP",
+  "Germany": "DE",
+  "India": "IN",
+  "United Kingdom": "GB",
+  "Brazil": "BR",
+  "South Korea": "KR",
+  "Russia": "RU"
+};
+
 const METRIC_TOOLTIPS: Record<string, { desc: string; significance: string; source: string }> = {
   // Economy
   "composite score": {
@@ -566,7 +579,7 @@ function TopBar({
 }) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<{ label: string; type: "metric" | "report"; link?: string; sectionId?: string }[]>([]);
+  const { results: searchResults, loading: searchLoading } = useSearch(query);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -590,77 +603,8 @@ function TopBar({
   const handleSearchChange = (val: string) => {
     setQuery(val);
     if (!val.trim()) {
-      setResults([]);
       return;
     }
-    
-    const searchTerms = val.toLowerCase().split(/\s+/);
-    const matches: typeof results = [];
-    
-    // Check synonyms map
-    const activeKeys = Object.keys(SYNONYMS).filter(key => {
-      return searchTerms.some(term => {
-        if (key.includes(term) || term.includes(key)) return true;
-        return SYNONYMS[key].some(syn => syn.includes(term) || term.includes(syn));
-      });
-    });
-
-    // 1. Match KPIs
-    domain.kpis.forEach(kpi => {
-      const lowerLabel = kpi.label.toLowerCase();
-      const matchesDirect = searchTerms.some(t => lowerLabel.includes(t));
-      const matchesSyn = activeKeys.some(key => lowerLabel.includes(key) || key.includes(lowerLabel));
-      
-      if (matchesDirect || matchesSyn) {
-        matches.push({
-          label: `Metric: ${kpi.label}`,
-          type: "metric",
-          sectionId: "kpi-section"
-        });
-      }
-    });
-
-    // 2. Match related datasets / literature reports
-    domain.related.forEach(rel => {
-      const lowerTitle = rel.title.toLowerCase();
-      const lowerSource = rel.source.toLowerCase();
-      const matchesDirect = searchTerms.some(t => lowerTitle.includes(t) || lowerSource.includes(t));
-      
-      if (matchesDirect) {
-        const cleanSource = rel.source.toUpperCase().trim();
-        const targetUrl = SOURCE_URLS[cleanSource] || "https://www.niti.gov.in";
-        matches.push({
-          label: `${rel.kind}: ${rel.title}`,
-          type: "report",
-          link: targetUrl
-        });
-      }
-    });
-
-    // 3. Fallback matching other sections
-    if (searchTerms.some(t => "map".includes(t) || "state".includes(t) || "performance".includes(t))) {
-      matches.push({
-        label: "Section: State Performance Map",
-        type: "metric",
-        sectionId: "state-map-section"
-      });
-    }
-    if (searchTerms.some(t => "trend".includes(t) || "historical".includes(t) || "timeline".includes(t))) {
-      matches.push({
-        label: "Section: Historical Trend Chart",
-        type: "metric",
-        sectionId: "trend-section"
-      });
-    }
-    if (searchTerms.some(t => "compare".includes(t) || "world".includes(t) || "rank".includes(t))) {
-      matches.push({
-        label: "Section: Country Comparison",
-        type: "metric",
-        sectionId: "comparison-section"
-      });
-    }
-
-    setResults(matches.slice(0, 5));
   };
 
   return (
@@ -696,34 +640,32 @@ function TopBar({
                 <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-zinc-100 dark:border-zinc-850 mb-1">
                   Search Matches
                 </div>
-                {results.length > 0 ? (
-                  <ul className="space-y-0.5">
-                    {results.map((r, idx) => (
+                {searchLoading ? (
+                  <div className="px-2 py-3 text-[12px] text-muted-foreground text-center">Loading...</div>
+                ) : searchResults.length > 0 ? (
+                  <ul className="space-y-0.5 max-h-64 overflow-y-auto">
+                    {searchResults.map((r, idx) => (
                       <li key={idx}>
-                        <button
-                          onClick={() => {
-                            if (r.link) {
-                              window.open(r.link, "_blank", "noopener,noreferrer");
-                            } else if (r.sectionId) {
-                              const el = document.getElementById(r.sectionId);
-                              if (el) {
-                                el.scrollIntoView({ behavior: "smooth", block: "center" });
-                              }
-                            }
-                            setQuery("");
-                            setResults([]);
-                          }}
-                          className="w-full text-left rounded-lg px-2 py-1.5 hover:bg-secondary/60 text-[12.5px] transition-colors flex items-center justify-between text-foreground hover:text-saffron group cursor-pointer"
+                        <Link
+                          to="/dashboard/$domain"
+                          params={{ domain: r.category.toLowerCase() }}
+                          onClick={() => setQuery("")}
+                          className="w-full text-left rounded-lg px-2 py-1.5 hover:bg-secondary/60 text-[12.5px] transition-colors flex flex-col group cursor-pointer"
                         >
-                          <span className="truncate pr-2 font-medium">{r.label}</span>
-                          <ArrowUpRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-saffron" />
-                        </button>
+                          <div className="flex items-center justify-between text-foreground group-hover:text-saffron">
+                            <span className="truncate pr-2 font-medium">{r.title}</span>
+                            <ArrowUpRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-saffron" />
+                          </div>
+                          <div className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                            {r.source} • {r.category}
+                          </div>
+                        </Link>
                       </li>
                     ))}
                   </ul>
                 ) : (
                   <div className="px-2 py-3 text-[12px] text-muted-foreground text-center">
-                    No matching indicators or files found.
+                    No matching datasets found.
                   </div>
                 )}
               </div>
@@ -1469,43 +1411,73 @@ function SourcesSection({ domain }: { domain: Domain }) {
 
 /* =================== TEMPLATE =================== */
 export function DomainDashboard({ domain }: { domain: Domain }) {
+  const { data: dataset, loading: datasetLoading, error: datasetError } = useDataset(domain.slug);
+  const { states, loading: statesLoading } = useStateData(domain.slug);
   const [fy, setFy] = useState(YEARS[YEARS.length - 1]);
 
-  // Scaled domain data based on FY selection
+  // Scaled domain data based on dynamic JSON or fallback to FY selection
   const activeDomainData = useMemo(() => {
     const cloned = JSON.parse(JSON.stringify(domain)) as Domain;
-    const yearIndex = YEARS.indexOf(fy); 
-    if (yearIndex === -1 || yearIndex === YEARS.length - 1) return cloned;
     
-    // Multiplier for nominal scaling: FY20-21 = 0.76, FY21-22 = 0.82, FY22-23 = 0.88, FY23-24 = 0.94, FY24-25 = 1.00
-    const multiplier = 0.76 + (yearIndex / 4) * 0.24; 
-    
-    // Scale KPIs values
-    cloned.kpis = cloned.kpis.map((kpi) => {
-      const cleaned = kpi.value.replace(/[^0-9.-]/g, "");
-      const raw = parseFloat(cleaned);
-      if (isNaN(raw)) return kpi;
+    const yearIndex = YEARS.indexOf(fy) !== -1 ? YEARS.indexOf(fy) : YEARS.length - 1;
+    const multiplier = 0.76 + (yearIndex / 4) * 0.24;
 
-      let newVal = raw;
-      if (kpi.value.includes("%")) {
-        newVal = raw - (4 - yearIndex) * 0.45;
-        kpi.value = `${newVal.toFixed(1)}%`;
-      } else if (kpi.value.includes("#")) {
-        const rankVal = parseInt(cleaned, 10);
-        newVal = rankVal + (4 - yearIndex);
-        kpi.value = `#${Math.max(1, Math.round(newVal))}`;
-      } else {
-        newVal = raw * multiplier;
-        if (kpi.value.includes("$")) {
-          const suffix = kpi.value.endsWith("T") ? "T" : kpi.value.endsWith("B") ? "B" : "";
-          kpi.value = `$${newVal.toFixed(1)}${suffix}`;
-        } else {
-          const suffix = kpi.value.replace(/[0-9.-]/g, "");
-          kpi.value = `${newVal.toFixed(1)}${suffix}`;
-        }
+    // 1. Inject dynamic data if available
+    if (dataset) {
+      cloned.trend = dataset.trendData.map(t => ({
+        year: parseInt(t.year, 10),
+        india: Number(t.India) || 0,
+        world: Number(t["United States"]) || 0
+      }));
+
+      cloned.topCountries = dataset.barData.map(b => ({
+        code: COUNTRY_CODES[b.name] || b.name.substring(0, 2).toUpperCase(),
+        name: b.name,
+        value: b.value
+      }));
+      
+      if (cloned.kpis.length > 0) {
+        cloned.kpis[0].value = dataset.indiaLatestValue.toString();
+        cloned.kpis[0].delta = `${dataset.indiaYoYGrowth > 0 ? '+' : ''}${dataset.indiaYoYGrowth.toFixed(1)}%`;
+        cloned.kpis[0].trend = dataset.indiaYoYGrowth >= 0 ? "up" : "down";
+        cloned.kpis[0].hint = `Latest data from ${dataset.latestYear}`;
       }
-      return kpi;
-    });
+    }
+
+    if (states && states.length > 0) {
+      cloned.states = states;
+    }
+
+    // 2. Fallback scaling if using mock data
+    if (!dataset && (!states || states.length === 0)) {
+      if (yearIndex !== YEARS.length - 1) {
+        cloned.kpis = cloned.kpis.map((kpi) => {
+          const cleaned = kpi.value.replace(/[^0-9.-]/g, "");
+          const raw = parseFloat(cleaned);
+          if (isNaN(raw)) return kpi;
+
+          let newVal = raw;
+          if (kpi.value.includes("%")) {
+            newVal = raw - (4 - yearIndex) * 0.45;
+            kpi.value = `${newVal.toFixed(1)}%`;
+          } else if (kpi.value.includes("#")) {
+            const rankVal = parseInt(cleaned, 10);
+            newVal = rankVal + (4 - yearIndex);
+            kpi.value = `#${Math.max(1, Math.round(newVal))}`;
+          } else {
+            newVal = raw * multiplier;
+            if (kpi.value.includes("$")) {
+              const suffix = kpi.value.endsWith("T") ? "T" : kpi.value.endsWith("B") ? "B" : "";
+              kpi.value = `$${newVal.toFixed(1)}${suffix}`;
+            } else {
+              const suffix = kpi.value.replace(/[0-9.-]/g, "");
+              kpi.value = `${newVal.toFixed(1)}${suffix}`;
+            }
+          }
+          return kpi;
+        });
+      }
+    }
 
     // Scale rankings values
     cloned.rankings = cloned.rankings.map((r) => {
@@ -1524,20 +1496,46 @@ export function DomainDashboard({ domain }: { domain: Domain }) {
       return r;
     });
 
-    // Scale top countries values
-    cloned.topCountries = cloned.topCountries.map((c) => {
-      c.value = Math.round((c.value * multiplier) * 10) / 10;
-      return c;
-    });
+    if (!dataset) {
+      cloned.topCountries = cloned.topCountries.map((c) => {
+        c.value = Math.round((c.value * multiplier) * 10) / 10;
+        return c;
+      });
+    }
 
-    // Scale states performance values
-    cloned.states = cloned.states.map((s) => {
-      s.value = Math.round((s.value * multiplier) * 10) / 10;
-      return s;
-    });
+    if (!states || states.length === 0) {
+      cloned.states = cloned.states.map((s) => {
+        s.value = Math.round((s.value * multiplier) * 10) / 10;
+        return s;
+      });
+    }
 
     return cloned;
-  }, [domain, fy]);
+  }, [domain, fy, dataset, states]);
+
+  if (datasetLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-saffron border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-muted-foreground text-sm">Loading dynamic datasets...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (datasetError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4 text-center max-w-sm">
+          <Info className="w-10 h-10 text-muted-foreground" />
+          <h2 className="text-xl font-bold">No Data Available</h2>
+          <p className="text-muted-foreground text-sm">{datasetError}</p>
+          <Link to="/" className="text-saffron hover:underline text-sm font-semibold mt-2">Return Home</Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

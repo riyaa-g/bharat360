@@ -1,0 +1,54 @@
+{
+  "title": "AI Readiness Index",
+  "source": "OXFORD",
+  "unit": "Value",
+  "lastUpdated": "2023",
+  "countries": [
+    "India",
+    "United States",
+    "China",
+    "Japan",
+    "Germany",
+    "United Kingdom",
+    "Brazil",
+    "South Korea",
+    "Russia"
+  ],
+  "years": [
+    2023
+  ],
+  "data": [
+    {
+      "country": "Brazil",
+      "2023": 69.55
+    },
+    {
+      "country": "China",
+      "2023": 76.27
+    },
+    {
+      "country": "Germany",
+      "2023": 76.78
+    },
+    {
+      "country": "India",
+      "2023": 66.55
+    },
+    {
+      "country": "Japan",
+      "2023": 72.24
+    },
+    {
+      "country": "Russia",
+      "2023": 59.57
+    },
+    {
+      "country": "South Korea",
+      "2023": 76.89
+    },
+    {
+      "country": "United States",
+      "2023": 88.36
+    }
+  ]
+}

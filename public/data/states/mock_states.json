@@ -1,0 +1,20 @@
+[
+  { "code": "MH", "name": "Maharashtra", "value": 85, "rank": 1, "trend": "up", "color": "saffron" },
+  { "code": "KA", "name": "Karnataka", "value": 82, "rank": 2, "trend": "up", "color": "saffron" },
+  { "code": "TN", "name": "Tamil Nadu", "value": 78, "rank": 3, "trend": "up", "color": "green" },
+  { "code": "GJ", "name": "Gujarat", "value": 75, "rank": 4, "trend": "down", "color": "green" },
+  { "code": "UP", "name": "Uttar Pradesh", "value": 72, "rank": 5, "trend": "up", "color": "green" },
+  { "code": "WB", "name": "West Bengal", "value": 68, "rank": 6, "trend": "down", "color": "blue" },
+  { "code": "DL", "name": "Delhi", "value": 65, "rank": 7, "trend": "up", "color": "blue" },
+  { "code": "TG", "name": "Telangana", "value": 62, "rank": 8, "trend": "up", "color": "blue" },
+  { "code": "KL", "name": "Kerala", "value": 60, "rank": 9, "trend": "down", "color": "navy" },
+  { "code": "RJ", "name": "Rajasthan", "value": 58, "rank": 10, "trend": "up", "color": "navy" },
+  { "code": "PB", "name": "Punjab", "value": 55, "rank": 11, "trend": "down", "color": "navy" },
+  { "code": "HR", "name": "Haryana", "value": 52, "rank": 12, "trend": "up", "color": "navy" },
+  { "code": "AP", "name": "Andhra Pradesh", "value": 48, "rank": 13, "trend": "down", "color": "navy" },
+  { "code": "MP", "name": "Madhya Pradesh", "value": 45, "rank": 14, "trend": "up", "color": "navy" },
+  { "code": "OD", "name": "Odisha", "value": 42, "rank": 15, "trend": "down", "color": "navy" },
+  { "code": "BR", "name": "Bihar", "value": 38, "rank": 16, "trend": "up", "color": "navy" },
+  { "code": "AS", "name": "Assam", "value": 35, "rank": 17, "trend": "down", "color": "navy" },
+  { "code": "JH", "name": "Jharkhand", "value": 32, "rank": 18, "trend": "up", "color": "navy" }
+]

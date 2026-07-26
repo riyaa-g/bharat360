@@ -4,12 +4,13 @@ import { DomainDashboard } from "@/components/dashboard/DomainDashboard";
 
 export const Route = createFileRoute("/dashboard/$domain")({
   loader: ({ params }) => {
-    const domain = DOMAINS[params.domain as DomainSlug];
-    if (!domain) throw notFound();
-    return { domain };
+    const slug = params.domain as DomainSlug;
+    if (!DOMAINS[slug]) throw notFound();
+    return { slug };
   },
   head: ({ loaderData }) => {
-    const d = loaderData?.domain;
+    const slug = loaderData?.slug;
+    const d = slug ? DOMAINS[slug] : undefined;
     const title = d ? `${d.name} of India — Bharat360` : "Dashboard — Bharat360";
     const desc = d
       ? `${d.tagline}. India's ${d.name.toLowerCase()} performance across global benchmarks, trends and state-level insights.`
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/dashboard/$domain")({
 });
 
 function DashboardPage() {
-  const { domain } = Route.useLoaderData();
+  const { slug } = Route.useLoaderData();
+  const domain = DOMAINS[slug];
   return <DomainDashboard domain={domain} />;
 }

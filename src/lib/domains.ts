@@ -68,12 +68,7 @@ const spark = (seed: number, n = 12) =>
 
 const years = Array.from({ length: 12 }, (_, i) => 2013 + i);
 
-const trend = (base: number, growth: number, worldOffset = -5) =>
-  years.map((y, i) => ({
-    year: y,
-    india: Math.round((base + i * growth + Math.sin(i) * 2) * 10) / 10,
-    world: Math.round((base + worldOffset + i * growth * 0.7) * 10) / 10,
-  }));
+const trend = (base: number, growth: number, worldOffset = -5) => [] as any;
 
 const indiaStates = [
   ["MH", "Maharashtra"],
@@ -96,12 +91,7 @@ const indiaStates = [
   ["JH", "Jharkhand"],
 ] as const;
 
-const statesFor = (seed: number) =>
-  indiaStates.map(([code, name], i) => ({
-    code,
-    name,
-    value: Math.round(40 + ((seed * (i + 3)) % 55) + Math.sin(i + seed) * 8),
-  }));
+const statesFor = (seed: number) => [] as any;
 
 export const DOMAINS: Record<DomainSlug, Domain> = {
   economy: {

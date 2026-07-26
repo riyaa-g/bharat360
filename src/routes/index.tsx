@@ -28,6 +28,7 @@ import {
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import indiaHero from "@/assets/india-hero.png";
+import { useOverview } from "@/hooks/useData";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -94,6 +95,8 @@ function Sparkline({
 }
 
 function Home() {
+  const { overview } = useOverview();
+
   return (
     <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
       <div className="relative z-10 flex flex-col min-w-0 flex-1">
@@ -107,7 +110,7 @@ function Home() {
           />
           <div className="relative z-10">
             <Navbar />
-            <Hero />
+            <Hero overview={overview} />
           </div>
         </div>
         <Highlights />
@@ -123,14 +126,14 @@ function Home() {
 /* ============================================================
    1. HERO
    ============================================================ */
-function Hero() {
+function Hero({ overview }: { overview: any }) {
   return (
     <section className="relative overflow-hidden">
       <div className="relative mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-10 px-6 pt-16 pb-24 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-10 lg:pt-24 lg:pb-32">
         {/* Left */}
         <div className="min-w-0">
           <span className="chip">
-            Updated for FY25
+            {overview ? `Updated for ${overview.lastUpdated}` : "Loading..."}
           </span>
 
           <h1 className="mt-6 text-[46px] leading-[1.02] tracking-[-0.035em] sm:text-6xl lg:text-[76px]">
@@ -180,7 +183,7 @@ function Hero() {
               ))}
             </div>
             <span className="text-[13px] text-muted-foreground">
-              Trusted by <span className="text-foreground">2,500+</span> data explorers
+              Powered by <span className="text-foreground">{overview ? overview.totalDatasets : "..."}</span> datasets from <span className="text-foreground">{overview ? overview.sources.length : "..."}</span> global sources
             </span>
           </div>
         </div>
@@ -463,7 +466,7 @@ function AtAGlance() {
                 <h3 className="text-lg font-medium tracking-tight">Category distribution</h3>
                 <p className="text-[12.5px] text-muted-foreground">Performance by pillar (out of 100)</p>
               </div>
-              <a href="#domains" className="text-[12.5px] text-muted-foreground hover:text-foreground">View all →</a>
+              <button onClick={() => document.getElementById('domains')?.scrollIntoView({ behavior: 'smooth' })} className="text-[12.5px] text-muted-foreground hover:text-foreground cursor-pointer">View all →</button>
             </div>
 
             <ul className="mt-6 space-y-3.5">
@@ -583,10 +586,9 @@ function Kpi({
   return (
     <div className={`col-span-6 md:col-span-3 p-5 rounded-[var(--radius-2xl)] border transition hover:shadow-md relative group ${cardBg}`}>
       <div className="flex items-center gap-1.5">
-        <p className="text-[11.5px] uppercase tracking-wider text-muted-foreground">{label}</p>
-        {tooltip && (
+        {tooltip ? (
           <div className="group/tooltip relative flex items-center justify-center">
-            <Info className="h-3.5 w-3.5 text-muted-foreground/70 cursor-help hover:text-foreground transition-colors" />
+            <p className="text-[11.5px] uppercase tracking-wider text-muted-foreground underline decoration-dashed decoration-muted-foreground/50 underline-offset-4 cursor-help hover:text-foreground transition-colors">{label}</p>
             <div className="absolute bottom-full left-1/2 mb-2 w-48 -translate-x-1/2 opacity-0 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:pointer-events-auto transition-opacity z-50">
               <div className="rounded-lg bg-zinc-900 dark:bg-zinc-100 p-2 text-left text-[11px] text-zinc-100 dark:text-zinc-900 shadow-xl">
                 <div className="font-bold mb-0.5">{tooltip.full}</div>
@@ -595,6 +597,8 @@ function Kpi({
               </div>
             </div>
           </div>
+        ) : (
+          <p className="text-[11.5px] uppercase tracking-wider text-muted-foreground">{label}</p>
         )}
       </div>
       <p className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl text-foreground">{value}</p>

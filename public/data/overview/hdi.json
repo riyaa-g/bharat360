@@ -1,0 +1,54 @@
+{
+  "title": "Human Development Index",
+  "source": "UNDP",
+  "unit": "Value",
+  "lastUpdated": "2023",
+  "countries": [
+    "India",
+    "United States",
+    "China",
+    "Japan",
+    "Germany",
+    "United Kingdom",
+    "Brazil",
+    "South Korea",
+    "Russia"
+  ],
+  "years": [
+    2023
+  ],
+  "data": [
+    {
+      "country": "Brazil",
+      "2023": 84.0
+    },
+    {
+      "country": "China",
+      "2023": 78.0
+    },
+    {
+      "country": "Germany",
+      "2023": 5.0
+    },
+    {
+      "country": "India",
+      "2023": 130.0
+    },
+    {
+      "country": "Japan",
+      "2023": 23.0
+    },
+    {
+      "country": "Russia",
+      "2023": 64.0
+    },
+    {
+      "country": "United Kingdom",
+      "2023": 13.0
+    },
+    {
+      "country": "United States",
+      "2023": 17.0
+    }
+  ]
+}
