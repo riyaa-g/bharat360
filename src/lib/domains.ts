@@ -47,6 +47,7 @@ export type Domain = {
   rank: number;
   outOf: number;
   rankDelta: number;
+  format: "currency" | "percentage" | "compact";
   kpis: KPI[];
   rankings: Ranking[]; 
   trend: { year: number; india: number; world: number }[];
@@ -97,6 +98,7 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
   economy: {
     slug: "economy",
     name: "Economy",
+    format: "currency",
     tagline: "GDP, trade & fiscal strength",
     icon: Coins,
     accent: "saffron",
@@ -158,6 +160,7 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
   healthcare: {
     slug: "healthcare",
     name: "Healthcare",
+    format: "compact",
     tagline: "Life expectancy, access & outcomes",
     icon: HeartPulse,
     accent: "green",
@@ -219,6 +222,7 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
   environment: {
     slug: "environment",
     name: "Environment",
+    format: "compact",
     tagline: "Emissions, forest cover & clean energy",
     icon: Leaf,
     accent: "green",
@@ -280,6 +284,7 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
   technology: {
     slug: "technology",
     name: "Technology",
+    format: "compact",
     tagline: "Digital infra, R&D & innovation",
     icon: Cpu,
     accent: "blue",
@@ -311,7 +316,7 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
     story: {
       title: "A billion people, one digital stack",
       body:
-        "Aadhaar, UPI and ONDC form the world's most-used Digital Public Infrastructure. India is now exporting this stack to 30+ countries via the India Stack Global initiative.",
+        "India has rapidly expanded its digital ecosystem through increasing internet penetration, digital payments, startup growth, and IT exports. Continued investment in AI, semiconductors, and digital infrastructure positions the country among the world's fastest-growing technology economies.",
       insights: [
         "UPI processes more transactions than Visa and Mastercard combined domestically.",
         "AI talent pool is 420,000 — 2nd only to the US.",
@@ -338,6 +343,7 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
   education: {
     slug: "education",
     name: "Education",
+    format: "percentage",
     tagline: "Literacy, enrolment & outcomes",
     icon: GraduationCap,
     accent: "saffron",
@@ -398,6 +404,7 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
   agriculture: {
     slug: "agriculture",
     name: "Agriculture",
+    format: "compact",
     tagline: "Food security & rural incomes",
     icon: Wheat,
     accent: "green",
@@ -457,6 +464,7 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
   safety: {
     slug: "safety",
     name: "Safety",
+    format: "compact",
     tagline: "Crime, road safety & disaster resilience",
     icon: ShieldCheck,
     accent: "navy",
@@ -516,6 +524,7 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
   governance: {
     slug: "governance",
     name: "Governance",
+    format: "compact",
     tagline: "Public services, corruption & rule of law",
     icon: Landmark,
     accent: "navy",
@@ -575,6 +584,7 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
   equality: {
     slug: "equality",
     name: "Equality",
+    format: "compact",
     tagline: "Gender, income & social inclusion",
     icon: Scale,
     accent: "saffron",

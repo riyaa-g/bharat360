@@ -8,6 +8,7 @@ import {
   ChevronUp,
   Sun,
   Moon,
+  Lightbulb,
 } from "lucide-react";
 import { DOMAIN_LIST } from "@/lib/domains";
 
@@ -171,6 +172,17 @@ export function Sidebar({ collapsed, onToggle, activeDomain }: SidebarProps) {
               >
                 <Globe2 className="h-4 w-4 shrink-0" />
                 {!collapsed && <span className="truncate">Compare</span>}
+              </Link>
+            </li>
+
+            {/* Insights Link */}
+            <li>
+              <Link
+                to="/insights"
+                className="flex items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] text-zinc-400 transition-colors hover:bg-white/5 hover:text-white [&.active]:bg-white/10 [&.active]:text-white"
+              >
+                <Lightbulb className="h-4 w-4 shrink-0" />
+                {!collapsed && <span className="truncate">India Insights</span>}
               </Link>
             </li>
           </ul>

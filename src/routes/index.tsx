@@ -25,6 +25,8 @@ import {
   ArrowUp,
   Info,
 } from "lucide-react";
+import { useState } from "react";
+import { formatNumber } from "@/lib/format";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import indiaHero from "@/assets/india-hero.png";
@@ -151,14 +153,13 @@ function Hero({ overview }: { overview: any }) {
           </p>
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
-            <Link
-              to="/dashboard/$domain"
-              params={{ domain: "economy" }}
+            <button
+              onClick={() => document.getElementById("domains")?.scrollIntoView({ behavior: "smooth" })}
               className="group inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-[14px] font-medium text-background transition hover:opacity-90"
             >
               Explore Dashboard
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-            </Link>
+            </button>
             <Link
               to="/compare"
               className="inline-flex items-center gap-2 rounded-full border hairline bg-background px-5 py-3 text-[14px] font-medium text-foreground transition hover:bg-secondary"
@@ -436,10 +437,10 @@ function AtAGlance() {
 
         <div className="grid grid-cols-12 gap-4 lg:gap-5">
           {/* KPI row */}
-          <Kpi label="GDP (Nominal)" value="$3.7T" delta="+7.8%" positive gradient="bg-gradient-to-br from-orange-100/90 via-card to-amber-100/30 dark:from-orange-950/40 dark:via-zinc-900 dark:to-amber-950/15 border-orange-200/80 dark:border-orange-900/40" tooltip={{ full: "Gross Domestic Product", desc: "Total market value of all finished goods and services produced." }} />
-          <Kpi label="Population" value="1.43B" delta="+0.8%" positive gradient="bg-gradient-to-br from-blue-100/90 via-card to-indigo-100/30 dark:from-blue-950/40 dark:via-zinc-900 dark:to-indigo-950/15 border-blue-200/80 dark:border-blue-900/40" />
-          <Kpi label="Per Capita Income" value="$2,663" delta="+6.1%" positive gradient="bg-gradient-to-br from-green-100/90 via-card to-emerald-100/30 dark:from-green-950/40 dark:via-zinc-900 dark:to-emerald-950/15 border-green-200/80 dark:border-green-900/40" tooltip={{ full: "Income per Person", desc: "Average income earned per person in a given area in a specified year." }} />
-          <Kpi label="HDI Rank" value="132" delta="↑ 5" positive gradient="bg-gradient-to-br from-purple-100/90 via-card to-violet-100/30 dark:from-purple-950/40 dark:via-zinc-900 dark:to-violet-950/15 border-purple-200/80 dark:border-purple-900/40" tooltip={{ full: "Human Development Index", desc: "A statistic composite index of life expectancy, education, and per capita income." }} />
+          <Kpi label="GDP (Nominal)" value={formatNumber(3700000000000, { type: "currency" })} delta="+7.8%" positive gradient="bg-gradient-to-br from-orange-100/90 via-card to-amber-100/30 dark:from-orange-950/40 dark:via-zinc-900 dark:to-amber-950/15 border-orange-200/80 dark:border-orange-900/40" tooltip={{ full: "Gross Domestic Product", desc: "Total market value of all finished goods and services produced." }} />
+          <Kpi label="Population" value={formatNumber(1430000000, { type: "compact" })} delta="+0.8%" positive gradient="bg-gradient-to-br from-blue-100/90 via-card to-indigo-100/30 dark:from-blue-950/40 dark:via-zinc-900 dark:to-indigo-950/15 border-blue-200/80 dark:border-blue-900/40" />
+          <Kpi label="Per Capita Income" value={formatNumber(2663, { type: "currency", maxDecimals: 0 })} delta="+6.1%" positive gradient="bg-gradient-to-br from-green-100/90 via-card to-emerald-100/30 dark:from-green-950/40 dark:via-zinc-900 dark:to-emerald-950/15 border-green-200/80 dark:border-green-900/40" tooltip={{ full: "Income per Person", desc: "Average income earned per person in a given area in a specified year." }} />
+          <Kpi label="HDI Rank" value={formatNumber(132, { type: "raw" })} delta="↑ 5" positive gradient="bg-gradient-to-br from-purple-100/90 via-card to-violet-100/30 dark:from-purple-950/40 dark:via-zinc-900 dark:to-violet-950/15 border-purple-200/80 dark:border-purple-900/40" tooltip={{ full: "Human Development Index", desc: "A statistic composite index of life expectancy, education, and per capita income." }} />
 
           {/* Global Position — dark hero tile */}
           <div className="col-span-12 md:col-span-6 lg:col-span-4 rounded-[var(--radius-2xl)] p-7 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black border border-zinc-800/80 text-white relative overflow-hidden">
@@ -614,21 +615,7 @@ function Kpi({
   );
 }
 
-/* ============================================================
-   4. INDIA'S SNAPSHOT — Excelling / Needs Attention
-   ============================================================ */
-const excelling = [
-  { title: "Digital public infrastructure", desc: "UPI, Aadhaar and DigiLocker set global benchmarks." },
-  { title: "Renewable energy capacity", desc: "Solar and wind additions among the world's fastest." },
-  { title: "Startup ecosystem", desc: "3rd largest globally with 100+ unicorns." },
-  { title: "Space & science", desc: "Cost-efficient missions raise India's global standing." },
-];
-const attention = [
-  { title: "Air quality in major cities", desc: "Winter AQI repeatedly enters severe category." },
-  { title: "Female labour participation", desc: "Still below global and regional averages." },
-  { title: "Learning outcomes", desc: "Foundational literacy and numeracy remain a gap." },
-  { title: "Healthcare spending", desc: "Public health spend lags peer economies." },
-];
+import { excelling, attention } from "@/lib/mockInsights";
 
 function Snapshot() {
   const topExcelling = excelling.slice(0, 3);
@@ -638,40 +625,48 @@ function Snapshot() {
     <section className="border-t border-b border-zinc-200/50 dark:border-zinc-800/85 bg-gradient-to-br from-orange-50/25 via-blue-50/10 via-white/80 to-green-50/20 dark:from-orange-950/10 dark:via-blue-950/5 dark:via-zinc-900/50 dark:to-green-950/10">
       <div className="mx-auto w-full max-w-[1400px] px-6 py-20 lg:px-10 lg:py-24">
         {/* Header */}
-        <div className="mb-12">
-          <span className="chip">The balance sheet</span>
-          <h2 className="mt-4 text-3xl tracking-tight sm:text-4xl text-foreground">
-            India's <span className="font-bold text-foreground">snapshot</span>
-          </h2>
-          <p className="mt-2 max-w-xl text-[14.5px] text-muted-foreground">
-            Where the country is pulling ahead — and where the numbers still need work.
-          </p>
+        <div className="mb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <span className="chip">The balance sheet</span>
+            <h2 className="mt-4 text-3xl tracking-tight sm:text-4xl text-foreground">
+              India's <span className="font-bold text-foreground">snapshot</span>
+            </h2>
+            <p className="mt-2 max-w-xl text-[14.5px] text-muted-foreground">
+              Where the country is pulling ahead — and where the numbers still need work.
+            </p>
+          </div>
+          <Link
+            to="/insights"
+            className="inline-flex items-center gap-2 rounded-full bg-saffron/10 px-4 py-2 text-[13px] font-bold text-saffron-600 transition hover:bg-saffron/20 dark:text-saffron-500"
+          >
+            Read Today's Insights <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
 
         {/* Row 1: India Excelling */}
         <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <span className="grid h-6 w-6 place-items-center rounded-lg bg-green/10 text-green dark:bg-green-950/20">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-            </span>
-            <h3 className="text-[14px] font-bold uppercase tracking-wider text-green-soft" style={{ color: "oklch(0.55 0.13 155)" }}>
-              India Excelling
-            </h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="grid h-6 w-6 place-items-center rounded-lg bg-green/10 text-green dark:bg-green-950/20">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              </span>
+              <h3 className="text-[14px] font-bold uppercase tracking-wider text-green-soft" style={{ color: "oklch(0.55 0.13 155)" }}>
+                India Excelling
+              </h3>
+            </div>
+            <Link to="/insights" className="text-[13px] font-medium text-muted-foreground hover:text-foreground">View all →</Link>
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {topExcelling.map((it) => (
               <div
                 key={it.title}
-                className="group relative flex flex-col justify-between rounded-2xl border border-zinc-200/50 dark:border-zinc-800/80 bg-gradient-to-br from-green-50/10 via-card to-emerald-50/5 p-6 transition hover:-translate-y-0.5 hover:shadow-md hover:border-green/20"
+                className="relative flex flex-col justify-between rounded-2xl border border-zinc-200/50 dark:border-zinc-800/80 bg-gradient-to-br from-green-50/10 via-card to-emerald-50/5 p-6"
               >
                 <div>
-                  <div className="flex items-start justify-between gap-4">
-                    <h4 className="text-[16px] font-bold tracking-tight text-foreground">
-                      {it.title}
-                    </h4>
-                    <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:text-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </div>
+                  <h4 className="text-[16px] font-bold tracking-tight text-foreground">
+                    {it.title}
+                  </h4>
                   <p className="mt-2.5 text-[13px] leading-relaxed text-muted-foreground">
                     {it.desc}
                   </p>
@@ -686,28 +681,28 @@ function Snapshot() {
 
         {/* Row 2: Needs Attention (with RED color to draw attention!) */}
         <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <span className="grid h-6 w-6 place-items-center rounded-lg bg-red-500/10 text-red-500 dark:bg-red-950/20">
-              <AlertTriangle className="h-3.5 w-3.5" />
-            </span>
-            <h3 className="text-[14px] font-bold uppercase tracking-wider text-red-500">
-              Needs Attention &amp; Focus
-            </h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="grid h-6 w-6 place-items-center rounded-lg bg-red-500/10 text-red-500 dark:bg-red-950/20">
+                <AlertTriangle className="h-3.5 w-3.5" />
+              </span>
+              <h3 className="text-[14px] font-bold uppercase tracking-wider text-red-500">
+                Needs Attention &amp; Focus
+              </h3>
+            </div>
+            <Link to="/insights" className="text-[13px] font-medium text-muted-foreground hover:text-foreground">View all →</Link>
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {topAttention.map((it) => (
               <div
                 key={it.title}
-                className="group relative flex flex-col justify-between rounded-2xl border border-red-150/60 dark:border-red-950/25 bg-gradient-to-br from-red-50/15 via-card to-rose-50/5 dark:from-red-950/10 dark:to-zinc-900/10 p-6 transition hover:-translate-y-0.5 hover:shadow-md hover:border-red-300 dark:hover:border-red-900/40"
+                className="relative flex flex-col justify-between rounded-2xl border border-red-150/60 dark:border-red-950/25 bg-gradient-to-br from-red-50/15 via-card to-rose-50/5 dark:from-red-950/10 dark:to-zinc-900/10 p-6"
               >
                 <div>
-                  <div className="flex items-start justify-between gap-4">
-                    <h4 className="text-[16px] font-bold tracking-tight text-foreground group-hover:text-red-500 transition-colors">
-                      {it.title}
-                    </h4>
-                    <ArrowUpRight className="h-4 w-4 shrink-0 text-red-400 transition-transform group-hover:text-red-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </div>
+                  <h4 className="text-[16px] font-bold tracking-tight text-foreground">
+                    {it.title}
+                  </h4>
                   <p className="mt-2.5 text-[13px] leading-relaxed text-muted-foreground">
                     {it.desc}
                   </p>

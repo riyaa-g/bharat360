@@ -36,11 +36,14 @@ import {
   Newspaper,
   Link2,
   Info,
+  ChevronDown,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import type { Domain, DomainSlug } from "@/lib/domains";
 import { DOMAIN_LIST } from "@/lib/domains";
+import { formatNumber } from "@/lib/format";
 import { useDataset, useStateData, useSearch } from "@/hooks/useData";
 
 /* =================== METRICS DEFINITIONS & SOURCES =================== */
@@ -633,7 +636,17 @@ function TopBar({
               placeholder={`Search ${domain.name.toLowerCase()} datasets…`}
               className="w-56 bg-transparent outline-none placeholder:text-muted-foreground/70 text-foreground"
             />
-            <kbd className="rounded border hairline bg-background px-1.5 py-0.5 text-[10px]">⌘K</kbd>
+            {query ? (
+              <button 
+                onClick={() => handleSearchChange("")}
+                className="grid h-4 w-4 place-items-center rounded-full bg-secondary/80 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors ml-1"
+                aria-label="Clear search"
+              >
+                <X className="h-2.5 w-2.5" />
+              </button>
+            ) : (
+              <kbd className="rounded border hairline bg-background px-1.5 py-0.5 text-[10px]">⌘K</kbd>
+            )}
 
             {query && (
               <div className="absolute top-full left-0 mt-2 w-72 rounded-xl border border-zinc-200/50 dark:border-zinc-800/80 bg-white/95 dark:bg-zinc-950/95 p-2 shadow-2xl backdrop-blur-md z-50 text-left">
@@ -892,7 +905,7 @@ function RankingSection({ domain }: { domain: Domain }) {
                     {c.name}
                   </span>
                   <span className={`ml-auto text-[12px] tabular-nums ${isIndia ? "font-bold text-saffron" : "text-muted-foreground"}`}>
-                    {c.value}
+                    {formatNumber(c.value, { type: domain.format })}
                   </span>
                 </div>
               </li>
@@ -914,12 +927,12 @@ function ComparisonSection({ domain }: { domain: Domain }) {
       if (domain.slug === "economy") {
         if (activeTab === "Per capita") {
           const perCapitaMap: Record<string, number> = {
-            US: 81.6,
-            CN: 12.6,
-            DE: 54.3,
-            JP: 33.8,
-            IN: 2.7,
-            GB: 48.9
+            US: 81600,
+            CN: 12600,
+            DE: 54300,
+            JP: 33800,
+            IN: 2700,
+            GB: 48900
           };
           val = perCapitaMap[c.code] || (c.value / 10);
         } else if (activeTab === "Growth") {
@@ -945,13 +958,10 @@ function ComparisonSection({ domain }: { domain: Domain }) {
   }, [domain.topCountries, activeTab, domain.slug]);
 
   const yAxisFormatter = useCallback((v: any) => {
-    if (domain.slug === "economy") {
-      if (activeTab === "Absolute") return `$${v}T`;
-      if (activeTab === "Per capita") return `$${v}K`;
-      if (activeTab === "Growth") return `${v}%`;
-    }
-    return v;
-  }, [domain.slug, activeTab]);
+    let type = domain.format;
+    if (activeTab === "Growth") type = "percentage";
+    return formatNumber(v, { type });
+  }, [domain.format, activeTab]);
 
   return (
     <section className="card-surface p-6">
@@ -1036,7 +1046,7 @@ function TrendSection({ domain }: { domain: Domain }) {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-hairline)" vertical={false} />
             <XAxis dataKey="year" tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
-            <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
+            <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" tickFormatter={(v) => formatNumber(v, { type: domain.format })} />
             <Tooltip
               contentStyle={{
                 borderRadius: 12,
@@ -1044,6 +1054,7 @@ function TrendSection({ domain }: { domain: Domain }) {
                 background: "var(--color-popover)",
                 fontSize: 12,
               }}
+              formatter={(v: any) => [formatNumber(v, { type: domain.format }), "Value"]}
             />
             <Line
               type="monotone"
@@ -1089,7 +1100,6 @@ function TrendSection({ domain }: { domain: Domain }) {
 /* =================== STATE MAP (heatmap grid) =================== */
 function StateMapSection({ domain }: { domain: Domain }) {
   const [hover, setHover] = useState<string | null>(null);
-  const [showMethodology, setShowMethodology] = useState(false);
   const max = Math.max(...domain.states.map((s) => s.value));
   const min = Math.min(...domain.states.map((s) => s.value));
   const top = [...domain.states].sort((a, b) => b.value - a.value).slice(0, 5);
@@ -1180,7 +1190,7 @@ function StateMapSection({ domain }: { domain: Domain }) {
                   {top.map((s) => (
                     <li key={s.code} className="flex justify-between text-foreground">
                       <span>{s.name}</span>
-                      <span className="tabular-nums font-semibold text-saffron">{s.value}</span>
+                      <span className="tabular-nums font-semibold text-saffron">{formatNumber(s.value, { type: domain.format })}</span>
                     </li>
                   ))}
                 </ul>
@@ -1192,25 +1202,10 @@ function StateMapSection({ domain }: { domain: Domain }) {
                   {bottom.map((s) => (
                     <li key={s.code} className="flex justify-between text-muted-foreground hover:text-foreground transition-colors">
                       <span>{s.name}</span>
-                      <span className="tabular-nums font-semibold">{s.value}</span>
+                      <span className="tabular-nums font-semibold">{formatNumber(s.value, { type: domain.format })}</span>
                     </li>
                   ))}
                 </ul>
-              </div>
-
-              <div className="mt-2 pt-4 border-t border-zinc-200/50 dark:border-zinc-800/50">
-                <button
-                  onClick={() => setShowMethodology(!showMethodology)}
-                  className="text-[10.5px] text-saffron hover:underline font-semibold flex items-center gap-1 cursor-pointer"
-                >
-                  {showMethodology ? "Hide calculation method" : "How is composite score calculated?"}
-                </button>
-                
-                {showMethodology && (
-                  <div className="mt-3 p-3 rounded-lg border border-zinc-200/50 dark:border-zinc-800 bg-secondary/30 text-[11px] leading-relaxed text-muted-foreground animate-in fade-in slide-in-from-top-1">
-                    <strong className="text-foreground">Calculation Method:</strong> Normalized state performance values are aggregated across all active KPIs within this domain and scaled to a maximum cohort baseline of 100.
-                  </div>
-                )}
               </div>
             </div>
           </>
@@ -1430,17 +1425,32 @@ export function DomainDashboard({ domain }: { domain: Domain }) {
         world: Number(t["United States"]) || 0
       }));
 
-      cloned.topCountries = dataset.barData.map(b => ({
-        code: COUNTRY_CODES[b.name] || b.name.substring(0, 2).toUpperCase(),
-        name: b.name,
-        value: b.value
-      }));
+      const targetYearStr = (2014 + yearIndex).toString(); 
+      const targetYear = dataset.raw.years.includes(parseInt(targetYearStr, 10)) ? targetYearStr : dataset.latestYear;
+
+      cloned.topCountries = dataset.raw.data.map(row => ({
+        code: COUNTRY_CODES[row.country] || row.country.substring(0, 2).toUpperCase(),
+        name: row.country,
+        value: Number(row[targetYear]) || 0
+      })).filter(c => c.value > 0).sort((a, b) => b.value - a.value).slice(0, 6);
+
+      const indiaRow = dataset.raw.data.find(r => r.country === "India");
       
-      if (cloned.kpis.length > 0) {
-        cloned.kpis[0].value = dataset.indiaLatestValue.toString();
-        cloned.kpis[0].delta = `${dataset.indiaYoYGrowth > 0 ? '+' : ''}${dataset.indiaYoYGrowth.toFixed(1)}%`;
-        cloned.kpis[0].trend = dataset.indiaYoYGrowth >= 0 ? "up" : "down";
-        cloned.kpis[0].hint = `Latest data from ${dataset.latestYear}`;
+      if (cloned.kpis.length > 0 && indiaRow) {
+        const val = Number(indiaRow[targetYear]) || 0;
+        
+        let prevVal = 0;
+        const prevYear = (parseInt(targetYear, 10) - 1).toString();
+        if (indiaRow[prevYear] !== undefined) {
+          prevVal = Number(indiaRow[prevYear]);
+        }
+        
+        const growth = prevVal !== 0 ? ((val - prevVal) / prevVal) * 100 : 0;
+
+        cloned.kpis[0].value = formatNumber(val, { type: domain.format });
+        cloned.kpis[0].delta = `${growth > 0 ? '+' : ''}${growth.toFixed(1)}%`;
+        cloned.kpis[0].trend = growth >= 0 ? "up" : "down";
+        cloned.kpis[0].hint = `Latest data from ${targetYear}`;
       }
     }
 

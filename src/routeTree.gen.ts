@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CompareRouteImport } from './routes/compare'
+import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as DashboardDomainRouteImport } from './routes/dashboard.$domain'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const CompareRoute = CompareRouteImport.update({
   path: '/compare',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InsightsRoute = InsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardDomainRoute = DashboardDomainRouteImport.update({
   id: '/dashboard/$domain',
   path: '/dashboard/$domain',
@@ -32,30 +38,34 @@ const DashboardDomainRoute = DashboardDomainRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
+  '/insights': typeof InsightsRoute
   '/dashboard/$domain': typeof DashboardDomainRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
+  '/insights': typeof InsightsRoute
   '/dashboard/$domain': typeof DashboardDomainRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
+  '/insights': typeof InsightsRoute
   '/dashboard/$domain': typeof DashboardDomainRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/compare' | '/dashboard/$domain'
+  fullPaths: '/' | '/compare' | '/insights' | '/dashboard/$domain'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/compare' | '/dashboard/$domain'
-  id: '__root__' | '/' | '/compare' | '/dashboard/$domain'
+  to: '/' | '/compare' | '/insights' | '/dashboard/$domain'
+  id: '__root__' | '/' | '/compare' | '/insights' | '/dashboard/$domain'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CompareRoute: typeof CompareRoute
+  InsightsRoute: typeof InsightsRoute
   DashboardDomainRoute: typeof DashboardDomainRoute
 }
 
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompareRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/insights': {
+      id: '/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof InsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/$domain': {
       id: '/dashboard/$domain'
       path: '/dashboard/$domain'
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CompareRoute: CompareRoute,
+  InsightsRoute: InsightsRoute,
   DashboardDomainRoute: DashboardDomainRoute,
 }
 export const routeTree = rootRouteImport

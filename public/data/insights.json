@@ -1,0 +1,20 @@
+{
+  "hero": {
+    "title": "India, Explained",
+    "subtext": "Every statistic tells only part of the story. This page connects the numbers with the policies, decisions and real-world events shaping India's progress."
+  },
+  "story": "<p><strong>Why has India managed to remain one of the fastest-growing major economies while many developed countries have slowed?</strong> And conversely, <strong>why hasn't India yet bridged the stark urban-rural divides in foundational learning and female workforce participation?</strong></p><p>The catalyst for the current growth has been the rapid proliferation of <mark class=\"bg-saffron-soft/30 text-foreground px-1 py-0.5 rounded\">Digital Public Infrastructure (DPI)</mark>, which accelerated financial inclusion at an unprecedented scale. Concurrently, strategic investments in highways and freight corridors are structurally lowering logistics costs, driving the 'China-plus-one' manufacturing shift.</p><p>Yet, structural gaps remain. Elevating foundational education and generating mass-scale employment are vital next steps.</p><p class=\"text-[18px] font-bold border-l-4 border-saffron pl-4 mt-8 text-foreground\">India's progress isn't driven by one breakthrough—it comes from many systems improving together.</p>",
+  "takeaways": [
+    "Digital formalization has dramatically expanded the tax base and credit access.",
+    "Infrastructure capital expenditure is driving multiplier effects across core industries.",
+    "The 'China-plus-one' strategy is tangibly boosting high-value manufacturing exports.",
+    "Bridging the urban-rural education quality gap remains essential for sustained growth."
+  ],
+  "ahead": "Over the next 18-24 months, critical indicators to watch include the execution rate of the semiconductor mission, the adoption velocity of ONDC (Open Network for Digital Commerce) among small merchants, and the impact of the newly ratified Free Trade Agreements on the export-import balance.",
+  "sources": [
+    { "title": "World Bank: Digital Progress and Trends Report 2025", "url": "#" },
+    { "title": "UNDP: Global Multidimensional Poverty Index", "url": "#" },
+    { "title": "NITI Aayog: National Strategy for Artificial Intelligence", "url": "#" },
+    { "title": "Ministry of Statistics and Programme Implementation Data", "url": "#" }
+  ]
+}
