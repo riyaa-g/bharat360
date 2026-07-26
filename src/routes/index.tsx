@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -20,6 +20,9 @@ import {
   ShieldCheck,
   Landmark,
   Scale,
+  CloudRain,
+  IndianRupee,
+  ArrowUp,
 } from "lucide-react";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
@@ -32,20 +35,21 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "A premium, AI-powered data platform exploring India's performance across global development indicators — economy, health, education, environment and more.",
+          "A premium data platform exploring India's performance across global development indicators — economy, health, education, environment and more.",
       },
       { property: "og:title", content: "Bharat360 — India's progress, measured through data" },
       {
         property: "og:description",
         content:
-          "Explore global rankings, compare nations and uncover AI insights on India's journey through trusted international datasets.",
+          "Explore global rankings, compare nations and uncover insights on India's journey through trusted international datasets.",
       },
     ],
   }),
   component: Home,
 });
 
-/* ---------- tiny inline sparkline ---------- */
+
+/* ---------- smooth inline sparkline ---------- */
 function Sparkline({
   points,
   stroke = "currentColor",
@@ -60,30 +64,57 @@ function Sparkline({
   const min = Math.min(...points);
   const max = Math.max(...points);
   const range = max - min || 1;
-  const d = points
-    .map((p, i) => {
-      const x = (i / (points.length - 1)) * w;
-      const y = h - ((p - min) / range) * h;
-      return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
+  
+  const coords = points.map((p, i) => {
+    const x = (i / (points.length - 1)) * w;
+    const y = h - ((p - min) / range) * (h - 6) - 3;
+    return { x, y };
+  });
+
+  let d = "";
+  if (coords.length > 0) {
+    d = `M ${coords[0].x.toFixed(1)},${coords[0].y.toFixed(1)}`;
+    for (let i = 0; i < coords.length - 1; i++) {
+      const p0 = coords[i];
+      const p1 = coords[i + 1];
+      const cpX1 = p0.x + (p1.x - p0.x) / 2;
+      const cpY1 = p0.y;
+      const cpX2 = p0.x + (p1.x - p0.x) / 2;
+      const cpY2 = p1.y;
+      d += ` C ${cpX1.toFixed(1)},${cpY1.toFixed(1)} ${cpX2.toFixed(1)},${cpY2.toFixed(1)} ${p1.x.toFixed(1)},${p1.y.toFixed(1)}`;
+    }
+  }
+
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className={className} preserveAspectRatio="none">
-      <path d={d} fill="none" stroke={stroke} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke={stroke} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
 function Home() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Navbar />
-      <Hero />
-      <Highlights />
-      <AtAGlance />
-      <Snapshot />
-      <Domains />
-      <Footer />
+    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
+      <div className="relative z-10 flex flex-col min-w-0 flex-1">
+        {/* Top Section: Extended saffron/Tiranga gradient and grid noise, limited to Navbar + Hero */}
+        <div className="relative overflow-hidden border-b hairline bg-background">
+          <div aria-hidden className="absolute inset-0 grid-noise pointer-events-none opacity-60 z-0" />
+          <div
+            aria-hidden
+            className="absolute -top-32 left-1/2 h-[750px] w-[1100px] -translate-x-1/2 rounded-full opacity-[0.28] blur-3xl pointer-events-none z-0"
+            style={{ background: "var(--gradient-tiranga)" }}
+          />
+          <div className="relative z-10">
+            <Navbar />
+            <Hero />
+          </div>
+        </div>
+        <Highlights />
+        <AtAGlance />
+        <Snapshot />
+        <Domains />
+        <Footer />
+      </div>
     </div>
   );
 }
@@ -94,42 +125,42 @@ function Home() {
 function Hero() {
   return (
     <section className="relative overflow-hidden">
-      <div aria-hidden className="absolute inset-0 grid-noise opacity-60" />
-      <div
-        aria-hidden
-        className="absolute -top-40 left-1/2 h-[600px] w-[900px] -translate-x-1/2 rounded-full opacity-[0.18] blur-3xl"
-        style={{ background: "var(--gradient-tiranga)" }}
-      />
       <div className="relative mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-10 px-6 pt-16 pb-24 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-10 lg:pt-24 lg:pb-32">
         {/* Left */}
         <div className="min-w-0">
           <span className="chip">
-            <Sparkles className="h-3 w-3" />
-            AI-powered · Updated for FY24
+            Updated for FY25
           </span>
 
           <h1 className="mt-6 text-[46px] leading-[1.02] tracking-[-0.035em] sm:text-6xl lg:text-[76px]">
             India's progress,
             <br />
-            <span className="font-editorial text-[52px] sm:text-7xl lg:text-[88px]">measured</span>
+            <span className="text-[52px] sm:text-7xl lg:text-[88px] font-bold">measured</span>
             <br />
             through data.
           </h1>
 
           <p className="mt-7 max-w-xl text-[15.5px] leading-relaxed text-muted-foreground">
-            Explore global rankings, compare nations, uncover AI-powered insights, and
+            Explore global rankings, compare nations, uncover key insights, and
             understand India's journey through trusted international datasets — brought
             together in one editorial view.
           </p>
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
-            <button className="group inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-[14px] font-medium text-background transition hover:opacity-90">
+            <Link
+              to="/dashboard/$domain"
+              params={{ domain: "economy" }}
+              className="group inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-3 text-[14px] font-medium text-background transition hover:opacity-90"
+            >
               Explore Dashboard
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-            </button>
-            <button className="inline-flex items-center gap-2 rounded-full border hairline bg-background px-5 py-3 text-[14px] font-medium text-foreground transition hover:bg-secondary">
+            </Link>
+            <Link
+              to="/compare"
+              className="inline-flex items-center gap-2 rounded-full border hairline bg-background px-5 py-3 text-[14px] font-medium text-foreground transition hover:bg-secondary"
+            >
               Compare Countries
-            </button>
+            </Link>
           </div>
 
           <div className="mt-10 flex items-center gap-4">
@@ -183,11 +214,6 @@ function Hero() {
             <p className="mt-1 text-[11.5px] text-muted-foreground">
               Among world's <span className="text-foreground">fastest</span>
             </p>
-            <Sparkline
-              points={[3, 4, 3.5, 5, 6, 5.5, 7, 7.8]}
-              stroke="oklch(0.58 0.14 155)"
-              className="mt-2 h-6 w-full text-green"
-            />
           </div>
 
           {/* HDI card */}
@@ -200,11 +226,6 @@ function Hero() {
             <p className="mt-1 inline-flex items-center gap-1 text-[11.5px] text-positive">
               <TrendingUp className="h-3 w-3" /> 5 places
             </p>
-            <Sparkline
-              points={[140, 138, 137, 135, 134, 133, 132]}
-              stroke="oklch(0.58 0.18 250)"
-              className="mt-2 h-6 w-full"
-            />
           </div>
         </div>
       </div>
@@ -213,151 +234,176 @@ function Hero() {
 }
 
 /* ============================================================
-   2. HEADLINES & HIGHLIGHTS  (spacious, editorial rows)
+   2. HEADLINES & HIGHLIGHTS (spacious, editorial rows)
    ============================================================ */
-const highlights = [
-  {
-    category: "Innovation",
-    title: "India climbs 2 places in Global Innovation Index",
-    time: "2h ago",
-    trend: [1, 2, 2, 3, 3, 4, 5],
-    trendColor: "oklch(0.58 0.14 155)",
-    delta: "+2",
-    positive: true,
-    icon: Lightbulb,
-    tone: "saffron" as const,
-  },
-  {
-    category: "Environment",
-    title: "Delhi AQI reaches severe category once again",
-    time: "4h ago",
-    trend: [3, 3, 4, 3, 5, 6, 5],
-    trendColor: "oklch(0.6 0.19 30)",
-    delta: "AQI 412",
-    positive: false,
-    icon: Wind,
-    tone: "negative" as const,
-  },
-  {
-    category: "Energy",
-    title: "Renewable energy capacity reaches a new record",
-    time: "6h ago",
-    trend: [2, 3, 3, 4, 5, 6, 7],
-    trendColor: "oklch(0.58 0.14 155)",
-    delta: "180 GW",
-    positive: true,
-    icon: Leaf,
-    tone: "green" as const,
-  },
-  {
-    category: "Economy",
-    title: "GDP growth among the world's fastest this quarter",
-    time: "6h ago",
-    trend: [3, 4, 4, 5, 5, 6, 7],
-    trendColor: "oklch(0.58 0.18 250)",
-    delta: "7.8%",
-    positive: true,
-    icon: Building2,
-    tone: "blue" as const,
-  },
-];
-
 function Highlights() {
   return (
-    <section className="relative border-t hairline bg-surface/60">
-      <div className="mx-auto w-full max-w-[1400px] px-6 py-20 lg:px-10 lg:py-24">
-        <div className="flex items-end justify-between gap-6">
-          <div>
-            <span className="chip">The pulse</span>
-            <h2 className="mt-4 text-3xl tracking-tight sm:text-4xl">
-              Headlines &amp; <span className="font-editorial">highlights</span>
+    <section className="relative border-t hairline bg-gradient-to-br from-orange-50/25 via-blue-50/10 via-white/80 to-green-50/20 dark:from-orange-950/10 dark:via-blue-950/5 dark:via-zinc-900/50 dark:to-green-950/10">
+      <div className="mx-auto w-full max-w-[1400px] px-6 py-16 lg:px-10">
+        {/* Header */}
+        <div className="flex items-center border-b hairline pb-4">
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-2 w-2 rounded-full bg-saffron" />
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              Headlines &amp; Highlights
             </h2>
-            <p className="mt-2 max-w-xl text-[14.5px] text-muted-foreground">
-              A curated mix of what's moving India's numbers today — the wins and
-              the warnings, side by side.
-            </p>
           </div>
-          <a
-            href="#"
-            className="hidden items-center gap-1.5 text-[13.5px] font-medium text-foreground hover:opacity-70 sm:inline-flex"
-          >
-            View all <ArrowUpRight className="h-4 w-4" />
-          </a>
         </div>
 
-        <div className="mt-10 flex flex-col gap-4">
-          {highlights.map((h) => {
-            const Icon = h.icon;
-            const toneBg =
-              h.tone === "saffron"
-                ? "oklch(0.94 0.06 65)"
-                : h.tone === "green"
-                  ? "oklch(0.94 0.05 155)"
-                  : h.tone === "blue"
-                    ? "oklch(0.94 0.04 250)"
-                    : "oklch(0.96 0.03 30)";
-            const toneFg =
-              h.tone === "saffron"
-                ? "oklch(0.55 0.15 55)"
-                : h.tone === "green"
-                  ? "oklch(0.45 0.14 155)"
-                  : h.tone === "blue"
-                    ? "oklch(0.5 0.17 250)"
-                    : "oklch(0.55 0.19 30)";
-            return (
-              <article
-                key={h.title}
-                className="card-glass group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-5 p-5 transition hover:-translate-y-[1px] hover:shadow-[var(--shadow-md)] sm:grid-cols-[auto_minmax(0,1.4fr)_minmax(0,1fr)_auto] sm:gap-8 sm:p-6"
-              >
-                <div
-                  className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl"
-                  style={{ background: toneBg, color: toneFg }}
-                >
-                  <Icon className="h-5 w-5" />
-                </div>
+        {/* Stacked News: No outer card, no border, only internal hairline separators */}
+        <div className="mt-4 divide-y divide-zinc-200/50 dark:divide-zinc-800/80">
+          
+          {/* 1. Innovation Section */}
+          <article className="group relative flex flex-col md:flex-row md:items-center justify-between py-8">
+            <div className="flex flex-col md:flex-row items-start gap-5 min-w-0 flex-1">
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-saffron text-white shadow-md shadow-saffron/10">
+                <Lightbulb className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-saffron">
+                  Innovation
+                </span>
+                <h3 className="mt-1.5 text-xl font-bold leading-snug tracking-tight text-foreground sm:text-2xl">
+                  India climbs 2 places in Global Innovation Index 2024
+                </h3>
+                <p className="mt-2.5 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
+                  Ranked 39th among 133 economies in 2024, reflecting strong improvements in R&D, patents, and technology adoption.
+                </p>
+              </div>
+            </div>
 
-                <div className="min-w-0">
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="text-[11px] font-semibold uppercase tracking-wider"
-                      style={{ color: toneFg }}
-                    >
-                      {h.category}
-                    </span>
-                    <span className="text-[11.5px] text-muted-foreground">{h.time}</span>
+            <div className="mt-4 md:mt-0 flex flex-col items-start md:items-end shrink-0 md:pl-6">
+              <div className="flex items-center gap-1.5 text-[22px] font-bold text-positive">
+                <ArrowUp className="h-5 w-5" /> 2
+              </div>
+              <span className="text-[11px] text-muted-foreground uppercase tracking-wider mt-0.5">
+                vs last update
+              </span>
+            </div>
+
+            <div className="absolute bottom-6 right-6 md:static mt-4 md:mt-0 md:self-end text-[11.5px] text-muted-foreground flex gap-1.5 shrink-0 md:pl-6">
+              <span>2h ago</span>
+              <span>•</span>
+              <span>Global Update</span>
+            </div>
+            {/* Spacer for mobile */}
+            <div className="h-4 md:hidden" />
+          </article>
+
+          {/* 2. Environment Section */}
+          <article className="group relative flex flex-col md:flex-row md:items-center justify-between py-8">
+            <div className="flex flex-col md:flex-row items-start gap-5 min-w-0 flex-1">
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-green text-white shadow-md shadow-green/10">
+                <CloudRain className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-green">
+                  Environment
+                </span>
+                <h3 className="mt-1.5 text-xl font-bold leading-snug tracking-tight text-foreground sm:text-2xl">
+                  Delhi AQI reaches Severe category
+                </h3>
+                <p className="mt-2.5 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
+                  Air quality in Delhi deteriorates due to rising pollution levels and unfavorable weather conditions.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 md:mt-0 flex items-center gap-6 shrink-0 md:pl-6">
+              <div className="flex flex-col items-start md:items-end">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">AQI</span>
+                <div className="text-3xl font-bold text-negative leading-none mt-1">
+                  412
+                </div>
+                <span className="text-[11px] text-negative font-semibold mt-1">
+                  Severe
+                </span>
+              </div>
+            </div>
+
+            <div className="absolute bottom-6 right-6 md:static mt-4 md:mt-0 md:self-end text-[11.5px] text-muted-foreground flex gap-1.5 shrink-0 md:pl-6">
+              <span>4h ago</span>
+              <span>•</span>
+              <span>India Update</span>
+            </div>
+            {/* Spacer for mobile */}
+            <div className="h-4 md:hidden" />
+          </article>
+
+          {/* 3. Energy & 4. Economy Split Column Section */}
+          <div className="grid grid-cols-1 divide-y md:divide-y-0 md:divide-x divide-zinc-200/50 dark:divide-zinc-800/80 md:grid-cols-2">
+            
+            {/* Energy Column */}
+            <article className="group relative flex flex-col justify-between py-8 md:pr-8">
+              <div>
+                <div className="flex items-center gap-4">
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-green text-white shadow-sm">
+                    <Leaf className="h-5 w-5" />
                   </div>
-                  <h3 className="mt-1 text-[16.5px] font-medium leading-snug tracking-tight text-foreground sm:text-[17.5px]">
-                    {h.title}
-                  </h3>
+                  <div>
+                    <span className="text-[10.5px] font-bold uppercase tracking-wider text-green">
+                      Energy
+                    </span>
+                    <h3 className="text-base font-bold tracking-tight text-foreground mt-0.5">
+                      Renewable energy capacity reaches new record
+                    </h3>
+                  </div>
                 </div>
+                <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
+                  India's total installed renewable energy capacity crosses 200 GW mark in April 2024.
+                </p>
+              </div>
 
-                <div className="hidden items-center gap-4 sm:flex">
-                  <Sparkline
-                    points={h.trend}
-                    stroke={h.trendColor}
-                    className="h-8 w-28"
-                  />
-                  <span
-                    className={`inline-flex items-center gap-1 text-[13px] font-medium ${
-                      h.positive ? "text-positive" : "text-negative"
-                    }`}
-                  >
-                    {h.positive ? (
-                      <TrendingUp className="h-3.5 w-3.5" />
-                    ) : (
-                      <TrendingDown className="h-3.5 w-3.5" />
-                    )}
-                    {h.delta}
+              <div className="mt-6 flex items-end justify-between">
+                <div className="text-[11.5px] text-muted-foreground flex gap-1.5">
+                  <span>6h ago</span>
+                  <span>•</span>
+                  <span>India Update</span>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="inline-flex items-center gap-0.5 text-[12.5px] font-bold text-positive">
+                    <ArrowUp className="h-3.5 w-3.5" /> 18.6%
                   </span>
                 </div>
+              </div>
+            </article>
 
-                <button className="inline-flex items-center gap-1.5 rounded-full border hairline bg-background px-3.5 py-2 text-[12.5px] font-medium text-foreground transition group-hover:bg-foreground group-hover:text-background">
-                  Explore
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </button>
-              </article>
-            );
-          })}
+            {/* Economy Column */}
+            <article className="group relative flex flex-col justify-between py-8 md:pl-8">
+              <div>
+                <div className="flex items-center gap-4">
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-blue text-white shadow-sm">
+                    <IndianRupee className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <span className="text-[10.5px] font-bold uppercase tracking-wider text-blue">
+                      Economy
+                    </span>
+                    <h3 className="text-base font-bold tracking-tight text-foreground mt-0.5">
+                      GDP growth among world's fastest
+                    </h3>
+                  </div>
+                </div>
+                <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
+                  India's real GDP growth estimated at 7.8% in FY24, outperforming major global economies.
+                </p>
+              </div>
+
+              <div className="mt-6 flex items-end justify-between">
+                <div className="text-[11.5px] text-muted-foreground flex gap-1.5">
+                  <span>8h ago</span>
+                  <span>•</span>
+                  <span>Economic Update</span>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="inline-flex items-center gap-0.5 text-[12.5px] font-bold text-blue">
+                    <ArrowUp className="h-3.5 w-3.5" /> 7.8%
+                  </span>
+                </div>
+              </div>
+            </article>
+
+          </div>
         </div>
       </div>
     </section>
@@ -375,7 +421,7 @@ function AtAGlance() {
           <div>
             <span className="chip">Overview</span>
             <h2 className="mt-4 text-3xl tracking-tight sm:text-4xl">
-              India at a <span className="font-editorial">glance</span>
+              India at a <span className="font-bold text-foreground">glance</span>
             </h2>
             <p className="mt-2 max-w-xl text-[14.5px] text-muted-foreground">
               A composite view of India across the indicators that matter most —
@@ -386,36 +432,27 @@ function AtAGlance() {
 
         <div className="grid grid-cols-12 gap-4 lg:gap-5">
           {/* KPI row */}
-          <Kpi label="GDP (Nominal)" value="$3.7T" delta="+7.8%" positive />
-          <Kpi label="Population" value="1.43B" delta="+0.8%" positive />
-          <Kpi label="Per Capita Income" value="$2,663" delta="+6.1%" positive />
-          <Kpi label="HDI Rank" value="132" delta="↑ 5" positive />
+          <Kpi label="GDP (Nominal)" value="$3.7T" delta="+7.8%" positive gradient="bg-gradient-to-br from-orange-100/90 via-card to-amber-100/30 dark:from-orange-950/40 dark:via-zinc-900 dark:to-amber-950/15 border-orange-200/80 dark:border-orange-900/40" />
+          <Kpi label="Population" value="1.43B" delta="+0.8%" positive gradient="bg-gradient-to-br from-blue-100/90 via-card to-indigo-100/30 dark:from-blue-950/40 dark:via-zinc-900 dark:to-indigo-950/15 border-blue-200/80 dark:border-blue-900/40" />
+          <Kpi label="Per Capita Income" value="$2,663" delta="+6.1%" positive gradient="bg-gradient-to-br from-green-100/90 via-card to-emerald-100/30 dark:from-green-950/40 dark:via-zinc-900 dark:to-emerald-950/15 border-green-200/80 dark:border-green-900/40" />
+          <Kpi label="HDI Rank" value="132" delta="↑ 5" positive gradient="bg-gradient-to-br from-purple-100/90 via-card to-violet-100/30 dark:from-purple-950/40 dark:via-zinc-900 dark:to-violet-950/15 border-purple-200/80 dark:border-purple-900/40" />
 
           {/* Global Position — dark hero tile */}
-          <div className="col-span-12 md:col-span-6 lg:col-span-4 rounded-[var(--radius-2xl)] p-7 text-background relative overflow-hidden"
-            style={{ background: "var(--gradient-ink)" }}>
+          <div className="col-span-12 md:col-span-6 lg:col-span-4 rounded-[var(--radius-2xl)] p-7 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black border border-zinc-800/80 text-white relative overflow-hidden">
             <div
               aria-hidden
-              className="absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-30 blur-3xl"
+              className="absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-[0.05] blur-3xl"
               style={{ background: "var(--gradient-tiranga)" }}
             />
-            <p className="text-[11px] uppercase tracking-wider text-background/60">Global Position</p>
+            <p className="text-[11px] uppercase tracking-wider text-zinc-400">Global Position</p>
             <div className="mt-2 flex items-baseline gap-1.5">
-              <span className="text-6xl font-semibold tracking-tight">39</span>
-              <span className="text-sm text-background/60">/167</span>
+              <span className="text-6xl font-semibold tracking-tight text-white">39</span>
+              <span className="text-sm text-zinc-400">/167</span>
             </div>
-            <p className="mt-2 text-[13px] text-background/70">Overall Index</p>
-            <p className="mt-1 inline-flex items-center gap-1 text-[13px] text-green-soft" style={{ color: "oklch(0.85 0.13 155)" }}>
+            <p className="mt-2 text-[13px] text-zinc-300">Overall Index</p>
+            <p className="mt-1 inline-flex items-center gap-1 text-[13px] text-emerald-400">
               <TrendingUp className="h-3.5 w-3.5" /> Up 2 places
             </p>
-
-            <div className="mt-6 h-24 w-full">
-              <Sparkline
-                points={[52, 48, 47, 45, 44, 42, 41, 39]}
-                stroke="oklch(0.85 0.13 155)"
-                className="h-24 w-full"
-              />
-            </div>
           </div>
 
           {/* Category distribution */}
@@ -453,20 +490,17 @@ function AtAGlance() {
           </div>
 
           {/* Trend overview */}
-          <div className="col-span-12 lg:col-span-3 card-surface p-6 flex flex-col">
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Trend Overview</p>
-            <p className="mt-1 text-[13px] text-muted-foreground">India's progress over time</p>
-            <div className="mt-4">
-              <p className="text-[12.5px] text-muted-foreground">Overall Index</p>
-              <p className="mt-1 text-3xl font-semibold tracking-tight text-positive">+8.4%</p>
-              <p className="text-[12px] text-muted-foreground">vs last year</p>
+          <div className="col-span-12 lg:col-span-3 bg-gradient-to-br from-blue-100/70 via-card to-indigo-100/40 dark:from-blue-950/30 dark:via-zinc-900 dark:to-indigo-950/15 border border-zinc-200/60 dark:border-zinc-800/80 p-6 rounded-[var(--radius-2xl)] flex flex-col justify-between">
+            <div>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Trend Overview</p>
+              <p className="mt-1 text-[13px] text-muted-foreground">India's progress over time</p>
+              <div className="mt-4">
+                <p className="text-[12.5px] text-muted-foreground">Overall Index</p>
+                <p className="mt-1 text-3xl font-semibold tracking-tight text-positive">+8.4%</p>
+                <p className="text-[12px] text-muted-foreground">vs last year</p>
+              </div>
             </div>
-            <Sparkline
-              points={[40, 42, 44, 46, 48, 51, 55]}
-              stroke="oklch(0.58 0.14 155)"
-              className="mt-auto h-16 w-full pt-4"
-            />
-            <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
+            <div className="mt-6 flex justify-between text-[11px] text-muted-foreground">
               <span>2019</span><span>2021</span><span>2024</span>
             </div>
           </div>
@@ -486,24 +520,19 @@ function AtAGlance() {
                 { name: "Education", rank: 101, color: "oklch(0.58 0.18 250)" },
                 { name: "Health", rank: 110, color: "oklch(0.55 0.16 200)" },
               ].map((p) => (
-                <div key={p.name} className="rounded-2xl border hairline p-4">
+                <div key={p.name} className="rounded-2xl border hairline p-4 flex flex-col justify-between min-h-[92px]">
                   <p className="text-[12px] text-muted-foreground">{p.name}</p>
                   <p className="mt-1 flex items-baseline gap-1">
                     <span className="text-2xl font-semibold tracking-tight">{p.rank}</span>
                     <span className="text-[11.5px] text-muted-foreground">/167</span>
                   </p>
-                  <Sparkline
-                    points={[p.rank + 6, p.rank + 4, p.rank + 3, p.rank + 1, p.rank]}
-                    stroke={p.color}
-                    className="mt-2 h-6 w-full"
-                  />
                 </div>
               ))}
             </div>
           </div>
 
           {/* Regional comparison */}
-          <div className="col-span-12 lg:col-span-4 card-surface p-6">
+          <div className="col-span-12 lg:col-span-4 bg-gradient-to-br from-amber-100/70 via-card to-orange-100/40 dark:from-orange-950/30 dark:via-zinc-900 dark:to-orange-950/15 border border-zinc-200/60 dark:border-zinc-800/80 p-6 rounded-[var(--radius-2xl)]">
             <div className="flex items-baseline justify-between">
               <div>
                 <h3 className="text-base font-medium tracking-tight">Regional comparison</h3>
@@ -539,16 +568,19 @@ function Kpi({
   value,
   delta,
   positive,
+  gradient,
 }: {
   label: string;
   value: string;
   delta: string;
   positive: boolean;
+  gradient?: string;
 }) {
+  const cardBg = gradient || "card-surface";
   return (
-    <div className="col-span-6 md:col-span-3 card-surface p-5">
+    <div className={`col-span-6 md:col-span-3 p-5 rounded-[var(--radius-2xl)] border transition hover:shadow-md ${cardBg}`}>
       <p className="text-[11.5px] uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{value}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl text-foreground">{value}</p>
       <p
         className={`mt-1 inline-flex items-center gap-1 text-[12px] ${
           positive ? "text-positive" : "text-negative"
@@ -578,76 +610,93 @@ const attention = [
 ];
 
 function Snapshot() {
+  const topExcelling = excelling.slice(0, 3);
+  const topAttention = attention.slice(0, 3);
+
   return (
-    <section className="border-t hairline bg-surface/60">
+    <section className="border-t border-b border-zinc-200/50 dark:border-zinc-800/85 bg-gradient-to-br from-orange-50/25 via-blue-50/10 via-white/80 to-green-50/20 dark:from-orange-950/10 dark:via-blue-950/5 dark:via-zinc-900/50 dark:to-green-950/10">
       <div className="mx-auto w-full max-w-[1400px] px-6 py-20 lg:px-10 lg:py-24">
-        <div className="mb-10">
+        {/* Header */}
+        <div className="mb-12">
           <span className="chip">The balance sheet</span>
-          <h2 className="mt-4 text-3xl tracking-tight sm:text-4xl">
-            India's <span className="font-editorial">snapshot</span>
+          <h2 className="mt-4 text-3xl tracking-tight sm:text-4xl text-foreground">
+            India's <span className="font-bold text-foreground">snapshot</span>
           </h2>
           <p className="mt-2 max-w-xl text-[14.5px] text-muted-foreground">
             Where the country is pulling ahead — and where the numbers still need work.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          <SnapshotColumn
-            tone="green"
-            eyebrow="India Excelling"
-            items={excelling}
-            Icon={CheckCircle2}
-          />
-          <SnapshotColumn
-            tone="saffron"
-            eyebrow="Needs Attention"
-            items={attention}
-            Icon={AlertTriangle}
-          />
+        {/* Row 1: India Excelling */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <span className="grid h-6 w-6 place-items-center rounded-lg bg-green/10 text-green dark:bg-green-950/20">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+            </span>
+            <h3 className="text-[14px] font-bold uppercase tracking-wider text-green-soft" style={{ color: "oklch(0.55 0.13 155)" }}>
+              India Excelling
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {topExcelling.map((it) => (
+              <div
+                key={it.title}
+                className="group relative flex flex-col justify-between rounded-2xl border border-zinc-200/50 dark:border-zinc-800/80 bg-gradient-to-br from-green-50/10 via-card to-emerald-50/5 p-6 transition hover:-translate-y-0.5 hover:shadow-md hover:border-green/20"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-4">
+                    <h4 className="text-[16px] font-bold tracking-tight text-foreground">
+                      {it.title}
+                    </h4>
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:text-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </div>
+                  <p className="mt-2.5 text-[13px] leading-relaxed text-muted-foreground">
+                    {it.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Divider Spacer */}
+        <div className="my-12 h-px bg-zinc-200/50 dark:bg-zinc-800/80" />
+
+        {/* Row 2: Needs Attention (with RED color to draw attention!) */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <span className="grid h-6 w-6 place-items-center rounded-lg bg-red-500/10 text-red-500 dark:bg-red-950/20">
+              <AlertTriangle className="h-3.5 w-3.5" />
+            </span>
+            <h3 className="text-[14px] font-bold uppercase tracking-wider text-red-500">
+              Needs Attention &amp; Focus
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {topAttention.map((it) => (
+              <div
+                key={it.title}
+                className="group relative flex flex-col justify-between rounded-2xl border border-red-150/60 dark:border-red-950/25 bg-gradient-to-br from-red-50/15 via-card to-rose-50/5 dark:from-red-950/10 dark:to-zinc-900/10 p-6 transition hover:-translate-y-0.5 hover:shadow-md hover:border-red-300 dark:hover:border-red-900/40"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-4">
+                    <h4 className="text-[16px] font-bold tracking-tight text-foreground group-hover:text-red-500 transition-colors">
+                      {it.title}
+                    </h4>
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-red-400 transition-transform group-hover:text-red-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </div>
+                  <p className="mt-2.5 text-[13px] leading-relaxed text-muted-foreground">
+                    {it.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
-  );
-}
-
-function SnapshotColumn({
-  tone,
-  eyebrow,
-  items,
-  Icon,
-}: {
-  tone: "green" | "saffron";
-  eyebrow: string;
-  items: { title: string; desc: string }[];
-  Icon: typeof CheckCircle2;
-}) {
-  const bg = tone === "green" ? "oklch(0.94 0.05 155)" : "oklch(0.95 0.06 65)";
-  const fg = tone === "green" ? "oklch(0.45 0.14 155)" : "oklch(0.55 0.15 55)";
-  return (
-    <div className="card-surface p-7">
-      <div className="flex items-center gap-3">
-        <span
-          className="grid h-9 w-9 place-items-center rounded-xl"
-          style={{ background: bg, color: fg }}
-        >
-          <Icon className="h-4.5 w-4.5" />
-        </span>
-        <h3 className="text-lg font-medium tracking-tight">{eyebrow}</h3>
-      </div>
-      <ul className="mt-6 divide-y hairline">
-        {items.map((it) => (
-          <li key={it.title} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-4">
-            <div className="min-w-0">
-              <p className="text-[15px] font-medium tracking-tight">{it.title}</p>
-              <p className="mt-0.5 text-[13px] text-muted-foreground">{it.desc}</p>
-            </div>
-            <button className="inline-flex items-center gap-1 rounded-full border hairline bg-background px-3 py-1.5 text-[12px] font-medium hover:bg-secondary">
-              Explore <ArrowRight className="h-3 w-3" />
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
 
@@ -792,7 +841,7 @@ function Domains() {
           <div>
             <span className="chip">Deep dives</span>
             <h2 className="mt-4 text-3xl tracking-tight sm:text-4xl">
-              Explore <span className="font-editorial">domains</span>
+              Explore <span className="font-bold text-foreground">domains</span>
             </h2>
             <p className="mt-2 max-w-xl text-[14.5px] text-muted-foreground">
               Dive into the areas shaping India's global story — from economy to
@@ -814,17 +863,30 @@ function Domains() {
 function DomainCard({ d }: { d: Domain }) {
   const isDark = d.name === "Technology";
   const Icon = d.Icon;
+
+  const domainStyles: Record<string, string> = {
+    Economy: "bg-orange-50/70 border-orange-100/60 dark:bg-orange-950/15 dark:border-orange-900/30",
+    Healthcare: "bg-blue-50/70 border-blue-100/60 dark:bg-blue-950/15 dark:border-blue-900/30",
+    Environment: "bg-green-50/70 border-green-100/60 dark:bg-green-950/15 dark:border-green-900/30",
+    Technology: "bg-zinc-900 border-zinc-800 text-white dark:bg-zinc-950 dark:border-zinc-850",
+    Education: "bg-purple-50/70 border-purple-100/60 dark:bg-purple-950/15 dark:border-purple-900/30",
+    Agriculture: "bg-amber-50/70 border-amber-100/60 dark:bg-amber-950/15 dark:border-amber-900/30",
+    Safety: "bg-rose-50/70 border-rose-100/60 dark:bg-rose-950/15 dark:border-rose-900/30",
+    Governance: "bg-indigo-50/70 border-indigo-100/60 dark:bg-indigo-950/15 dark:border-indigo-900/30",
+    Equality: "bg-pink-50/70 border-pink-100/60 dark:bg-pink-950/15 dark:border-pink-900/30",
+  };
+
+  const cardStyle = domainStyles[d.name] || "bg-white border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800 text-foreground";
+  const textClass = isDark ? "text-white" : "text-foreground";
+  const mutedTextClass = isDark ? "text-zinc-300" : "text-muted-foreground";
+
   return (
     <article
-      className={`${d.span} group relative flex min-h-[220px] flex-col justify-between overflow-hidden rounded-[var(--radius-2xl)] border hairline p-6 transition hover:-translate-y-[1px] hover:shadow-[var(--shadow-md)]`}
-      style={{
-        background: d.tint,
-        color: isDark ? "oklch(0.97 0.003 90)" : undefined,
-      }}
+      className={`${d.span} group relative flex min-h-[220px] flex-col justify-between overflow-hidden rounded-[var(--radius-2xl)] border p-6 transition hover:-translate-y-[1px] hover:shadow-[var(--shadow-md)] ${cardStyle}`}
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-16 -bottom-16 h-56 w-56 rounded-full opacity-30 blur-3xl"
+        className="pointer-events-none absolute -right-16 -bottom-16 h-56 w-56 rounded-full opacity-[0.08] dark:opacity-[0.12] blur-3xl"
         style={{ background: d.accent }}
       />
       <div className="relative flex items-start justify-between">
@@ -838,30 +900,28 @@ function DomainCard({ d }: { d: Domain }) {
           >
             <Icon className="h-4.5 w-4.5" />
           </span>
-          <h3 className="text-[17px] font-medium tracking-tight">{d.name}</h3>
+          <h3 className={`text-[17px] font-semibold tracking-tight ${textClass}`}>{d.name}</h3>
         </div>
         <ArrowUpRight
-          className="h-4 w-4 opacity-60 transition group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+          className={`h-4 w-4 opacity-60 transition group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${textClass}`}
         />
       </div>
 
       <div className="relative mt-6 grid grid-cols-3 gap-3">
         {d.metrics.map((m) => (
           <div key={m.label} className="min-w-0">
-            <p
-              className="truncate text-[10.5px] uppercase tracking-wider"
-              style={{ color: isDark ? "oklch(0.7 0.02 265)" : "oklch(0.5 0.02 265)" }}
-            >
+            <p className={`truncate text-[10.5px] uppercase tracking-wider ${mutedTextClass}`}>
               {m.label}
             </p>
-            <p className="mt-1 text-lg font-semibold tracking-tight sm:text-xl">{m.value}</p>
+            <p className={`mt-1 text-lg font-semibold tracking-tight sm:text-xl ${textClass}`}>{m.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="relative mt-5 flex items-end justify-between gap-4">
-        <Sparkline points={d.spark} stroke={d.accent} className="h-8 w-32 opacity-90" />
-        <button
+      <div className="relative mt-5 flex items-end justify-end">
+        <Link
+          to="/dashboard/$domain"
+          params={{ domain: d.name.toLowerCase() }}
           className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-medium transition"
           style={{
             background: isDark ? "oklch(0.97 0.003 90)" : "oklch(0.16 0.02 265)",
@@ -869,7 +929,7 @@ function DomainCard({ d }: { d: Domain }) {
           }}
         >
           Explore <ArrowRight className="h-3.5 w-3.5" />
-        </button>
+        </Link>
       </div>
     </article>
   );

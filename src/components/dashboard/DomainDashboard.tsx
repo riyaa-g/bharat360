@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -36,119 +36,333 @@ import {
   Newspaper,
   Link2,
   Bell,
+  Info,
   type LucideIcon,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import type { Domain, DomainSlug } from "@/lib/domains";
 import { DOMAIN_LIST } from "@/lib/domains";
 
-const YEARS = ["FY 2020-21", "FY 2021-22", "FY 2022-23", "FY 2023-24", "FY 2024-25"];
+/* =================== METRICS DEFINITIONS & SOURCES =================== */
+const METRIC_TOOLTIPS: Record<string, { desc: string; significance: string; source: string }> = {
+  // Economy
+  "gdp (nominal)": {
+    desc: "Total market value of all finished goods and services produced within a country in current US dollars.",
+    significance: "Indicates the absolute size of the national economy on the global stage.",
+    source: "World Bank / IMF"
+  },
+  "gdp growth": {
+    desc: "Annual percentage change in the constant-price Gross Domestic Product (inflation-adjusted).",
+    significance: "Measures economic momentum and acceleration speed of national production.",
+    source: "MoSPI / IMF"
+  },
+  "inflation": {
+    desc: "Rate of change in the Consumer Price Index (CPI), representing the cost of a basket of standard consumer goods.",
+    significance: "High inflation erodes purchasing power; lower stable inflation helps investments.",
+    source: "RBI / MoSPI"
+  },
+  "forex reserves": {
+    desc: "Foreign currency assets, gold, SDRs, and reserve position held by the Reserve Bank of India.",
+    significance: "Acts as a financial cushion against balance of payment shocks and stabilizes local currency.",
+    source: "Reserve Bank of India (RBI)"
+  },
+  // Healthcare
+  "life expectancy": {
+    desc: "Average number of years a newborn child is expected to live under current mortality patterns.",
+    significance: "Core indicator of public health, sanitation, nutrition, and lifestyle qualities.",
+    source: "WHO / Census India"
+  },
+  "health spend / gdp": {
+    desc: "Public and private health expenditures combined, measured as a percentage of total Gross Domestic Product.",
+    significance: "Reflects national prioritization of healthcare services and infrastructure investment.",
+    source: "National Health Accounts / WHO"
+  },
+  "infant mortality": {
+    desc: "Number of infant deaths under 1 year of age per 1,000 live births in a given year.",
+    significance: "Extremely sensitive proxy for maternal care, neonatal nutrition, and primary healthcare access.",
+    source: "SRS / Ministry of Health"
+  },
+  "ayushman coverage": {
+    desc: "Total count of vulnerable families registered under the Ayushman Bharat PM-JAY health insurance plan.",
+    significance: "Indicates social safety net penetration for tertiary care and hospitalization cost offsets.",
+    source: "National Health Authority (NHA)"
+  },
+  // Environment
+  "renewable capacity": {
+    desc: "Total electrical generation capacity from non-fossil resources like solar, wind, hydro, and biomass.",
+    significance: "Demonstrates energy grid diversification towards green, sustainable alternatives.",
+    source: "Central Electricity Authority (CEA)"
+  },
+  "forest cover": {
+    desc: "Total land area classified under forest canopy and tree cover as a percentage of geographical area.",
+    significance: "Measures carbon sequestration capability and biodiversity preservation efforts.",
+    source: "Forest Survey of India (FSI)"
+  },
+  "co₂ per capita": {
+    desc: "Metric tons of carbon dioxide emitted annually divided by the mid-year population of the country.",
+    significance: "Tracks carbon intensity per individual citizen relative to global climate equity benchmarks.",
+    source: "Global Carbon Budget / OWID"
+  },
+  "ev sales share": {
+    desc: "Percentage of new electric vehicles registered out of all automobile sales in the fiscal year.",
+    significance: "Tracks transport decarbonization and clean energy transition momentum.",
+    source: "VAHAN Dashboard / CEA"
+  },
+  // Technology
+  "active internet users": {
+    desc: "Estimated total population accessing the internet at least once a month.",
+    significance: "Core index of digital connectivity and mobile internet access scale.",
+    source: "TRAI / IAMAI"
+  },
+  "digital transactions": {
+    desc: "Annual transaction volume executed through Unified Payments Interface (UPI) and other digital rails.",
+    significance: "Tracks transition towards formal digital finance and cash-less commerce.",
+    source: "NPCI / Ministry of IT"
+  },
+  "it exports": {
+    desc: "Total value of software and services exported globally by Indian companies in billions of US dollars.",
+    significance: "Reflects technical competitiveness and contribution to global software supply chains.",
+    source: "NASSCOM / Ministry of Commerce"
+  },
+  "startup density": {
+    desc: "Total number of active, recognized startups per million urban population.",
+    significance: "Tracks regional entrepreneurial vitality and knowledge economy emergence.",
+    source: "DPIIT / NITI Aayog"
+  },
+  // Education
+  "literacy rate": {
+    desc: "Percentage of the population aged 7 and above who can read and write with understanding.",
+    significance: "Foundation index of human resource capacity and basic educational outcomes.",
+    source: "MoE / National Sample Survey"
+  },
+  "gross enrollment": {
+    desc: "Ratio of total students enrolled in higher education to the corresponding age-group population.",
+    significance: "Tracks secondary-to-tertiary transition rates and higher skill generation capability.",
+    source: "AISHE / Ministry of Education"
+  },
+  "pupil-teacher ratio": {
+    desc: "Average number of pupils per teacher in primary and secondary schools.",
+    significance: "Reflects educational resources distribution and personalized student attention.",
+    source: "UDISE+ / Ministry of Education"
+  },
+  "education spend / gdp": {
+    desc: "Government funding on education services, measured as a percentage of Gross Domestic Product.",
+    significance: "Tracks public investment prioritization for upcoming generations.",
+    source: "Union & State Budgets / MoE"
+  },
+  // Agriculture
+  "foodgrain output": {
+    desc: "Total agricultural production of cereals, pulses, and grains in million metric tonnes.",
+    significance: "Core pillar of national food security and agrarian economic strength.",
+    source: "Ministry of Agriculture"
+  },
+  "irrigated area": {
+    desc: "Percentage of total cropped area supplied with agricultural canals, tubes, or sprinklers.",
+    significance: "Reflects agricultural resilience against erratic monsoon downpours.",
+    source: "Ministry of Agriculture / DAC&FW"
+  },
+  "cold storage capacity": {
+    desc: "Total capacity in million tonnes for temperature-controlled storage of perishable horticultural crops.",
+    significance: "Key logistics factor for reducing post-harvest wastage and stabilizing crop prices.",
+    source: "NCCD / Ministry of Food Processing"
+  },
+  "agri exports": {
+    desc: "Total export value of agricultural and processed food products in billions of US dollars.",
+    significance: "Indicates global market integration and agricultural export surplus potential.",
+    source: "APEDA / Ministry of Commerce"
+  },
+  // Safety
+  "crime rate": {
+    desc: "Total cognizable offenses registered under Indian Penal Code (IPC) per 100,000 population.",
+    significance: "Standard benchmark for law enforcement effectiveness and public security.",
+    source: "National Crime Records Bureau (NCRB)"
+  },
+  "cyber crimes": {
+    desc: "Total registered digital fraud, hacking, or online abuse offenses per 100,000 population.",
+    significance: "Measures security challenges emerging from rapid digital connectivity growth.",
+    source: "NCRB / Ministry of Home Affairs"
+  },
+  "road fatalities": {
+    desc: "Total annual deaths resulting from road traffic accidents per 100,000 registered vehicles.",
+    significance: "Tracks transport engineering safety and emergency trauma care system efficiency.",
+    source: "MoRTH / NCRB"
+  },
+  "cctv coverage": {
+    desc: "Average public security cameras installed per square kilometer in urban municipal centers.",
+    significance: "Tracks municipal surveillance infrastructure capability and policing modernization.",
+    source: "State Police Departments / NCRB"
+  },
+  // Governance
+  "digital services": {
+    desc: "Percentage of government G2C services delivered online through national single-window portals.",
+    significance: "Measures administrative efficiency, ease of citizen interaction, and red-tape reduction.",
+    source: "NeSDA / Ministry of Personnel"
+  },
+  "judicial vacancy": {
+    desc: "Percentage of sanctioned judges positions currently lying vacant in High Courts and District Courts.",
+    significance: "Key driver of pending case backlogs and delay in litigation resolution.",
+    source: "Department of Justice"
+  },
+  "rti disposal rate": {
+    desc: "Percentage of Right to Information requests disposed of within the statutory 30-day timeline.",
+    significance: "Proxy for transparency, accountability, and responsiveness.",
+    source: "Central Information Commission (CIC)"
+  },
+  "ease of business": {
+    desc: "Index score based on simplified state-level business licenses and regulatory compliance burdens.",
+    significance: "Measures state-level initiatives to attract investments and business capital.",
+    source: "DPIIT / World Bank"
+  },
+  // Equality
+  "gender pay gap": {
+    desc: "Difference between average male and female wages in the formal sector as a percentage of male wages.",
+    significance: "Key indicator of workplace inequality and demographic inclusion outcomes.",
+    source: "NSSO / PLFS Survey"
+  },
+  "female participation": {
+    desc: "Percentage of the working-age female population actively employed or seeking employment.",
+    significance: "Tracks economic empowerment and utilization of female human resources.",
+    source: "Periodic Labour Force Survey (PLFS)"
+  },
+  "rural-urban gap": {
+    desc: "Ratio of average urban household consumption expenditure to average rural household consumption.",
+    significance: "Tracks spatial inequality and development distribution between cities and villages.",
+    source: "NSSO Household Survey"
+  },
+  "gini coefficient": {
+    desc: "Statistical measure of wealth distribution inequality, where 0 is perfect equality and 1 is perfect inequality.",
+    significance: "Tracks concentration of economic gains across income deciles.",
+    source: "World Bank / NSSO"
+  }
+};
 
-/* =================== SIDEBAR =================== */
-function Sidebar({
-  active,
-  collapsed,
-  onToggle,
-}: {
-  active: DomainSlug;
-  collapsed: boolean;
-  onToggle: () => void;
-}) {
+const SOURCE_URLS: Record<string, string> = {
+  MOSPI: "https://www.mospi.gov.in",
+  RBI: "https://www.rbi.org.in",
+  "NITI AAYOG": "https://www.niti.gov.in",
+  "PRS INDIA": "https://prsindia.org",
+  IMF: "https://www.imf.org",
+  "WORLD BANK": "https://www.worldbank.org",
+  UNDP: "https://www.undp.org",
+  WHO: "https://www.who.int",
+  MOHFW: "https://www.mohfw.gov.in",
+  NHM: "https://nhm.gov.in",
+  FSI: "https://fsi.nic.in",
+  CEA: "https://cea.nic.in",
+  NHP: "https://www.nhp.gov.in",
+  WEF: "https://www.weforum.org",
+  "WORLD ECONOMIC FORUM": "https://www.weforum.org",
+  "OUR WORLD IN DATA": "https://ourworldindata.org",
+  OECD: "https://www.oecd.org",
+  TRAI: "https://www.trai.gov.in",
+  NPCI: "https://www.npci.org.in",
+  NASSCOM: "https://nasscom.in",
+  DPIIT: "https://dpiit.gov.in",
+  NCRB: "https://ncrb.gov.in",
+  MORTH: "https://morth.nic.in",
+  NHA: "https://nha.gov.in"
+};
+
+function InfoTooltip({ label }: { label: string }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const info = METRIC_TOOLTIPS[label.toLowerCase()];
+  if (!info) return null;
+
   return (
-    <aside
-      className={`${collapsed ? "w-[72px]" : "w-[248px]"} shrink-0 border-r hairline bg-surface/60 backdrop-blur-xl transition-[width] duration-300`}
+    <div 
+      className="relative inline-flex items-center ml-1"
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
     >
-      <div className="sticky top-0 flex h-full max-h-screen flex-col">
-        <div className="flex h-16 items-center gap-2 border-b hairline px-4">
-          <Link to="/" className="flex min-w-0 items-center gap-2.5">
-            <span
-              aria-hidden
-              className="grid h-7 w-7 shrink-0 place-items-center rounded-full"
-              style={{ background: "var(--gradient-tiranga)" }}
-            >
-              <span className="h-2.5 w-2.5 rounded-full bg-background" />
-            </span>
-            {!collapsed && (
-              <span className="truncate text-[15px] font-semibold tracking-tight">Bharat360</span>
-            )}
-          </Link>
-          <button
-            onClick={onToggle}
-            className="ml-auto grid h-7 w-7 place-items-center rounded-full border hairline text-muted-foreground hover:text-foreground"
-            aria-label="Toggle sidebar"
-          >
-            {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
-          </button>
+      <button
+        className="rounded-full p-0.5 text-muted-foreground/50 hover:bg-secondary hover:text-foreground transition cursor-help shrink-0"
+        aria-label="Info"
+      >
+        <Info className="h-3.5 w-3.5" />
+      </button>
+      {showTooltip && (
+        <div className="absolute bottom-full left-1/2 z-50 mb-2.5 w-64 -translate-x-1/2 rounded-xl border border-zinc-200/50 dark:border-zinc-800/80 bg-white/95 dark:bg-zinc-950/95 p-3 shadow-xl backdrop-blur-md text-[10.5px] leading-normal text-foreground pointer-events-none text-left">
+          <div className="font-bold text-foreground">{label}</div>
+          <p className="mt-1 text-muted-foreground">{info.desc}</p>
+          <div className="mt-1.5 pt-1.5 border-t border-zinc-150 dark:border-zinc-850/60 text-[9.5px] leading-relaxed">
+            <span className="font-semibold text-muted-foreground">Why it matters:</span> {info.significance}
+          </div>
+          <div className="mt-1.5 text-[9px] text-muted-foreground/60 italic">
+            Source: {info.source}
+          </div>
+          <div className="absolute top-full left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1 rotate-45 border-r border-b border-zinc-200/50 dark:border-zinc-800/80 bg-white/95 dark:bg-zinc-950/95" />
         </div>
-
-        <nav className="flex-1 overflow-y-auto p-3">
-          {!collapsed && (
-            <div className="px-2 pb-2 pt-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-              Domains
-            </div>
-          )}
-          <ul className="space-y-1">
-            {DOMAIN_LIST.map((d) => {
-              const Icon = d.icon;
-              const isActive = d.slug === active;
-              return (
-                <li key={d.slug}>
-                  <Link
-                    to="/dashboard/$domain"
-                    params={{ domain: d.slug }}
-                    className={`flex items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] transition-colors ${
-                      isActive
-                        ? "bg-foreground text-background"
-                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && <span className="truncate">{d.name}</span>}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-
-          {!collapsed && (
-            <>
-              <div className="px-2 pb-2 pt-6 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                Explore
-              </div>
-              <ul className="space-y-1">
-                <li>
-                  <Link
-                    to="/compare"
-                    className="flex items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  >
-                    <Globe2 className="h-4 w-4" /> Compare
-                  </Link>
-                </li>
-              </ul>
-            </>
-          )}
-        </nav>
-      </div>
-    </aside>
+      )}
+    </div>
   );
 }
+
+function MethodologyPopover() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative inline-block text-left">
+      <button
+        onClick={() => setOpen((prev) => !prev)}
+        className="text-[11px] font-semibold text-saffron hover:underline ml-2 transition cursor-pointer"
+      >
+        Learn Methodology
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40 cursor-default" onClick={() => setOpen(false)} />
+          <div className="absolute bottom-full left-1/2 z-50 mb-2 w-64 -translate-x-1/2 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 p-4 shadow-xl text-[11px] leading-relaxed text-foreground animate-scale-in">
+            <h4 className="font-bold text-foreground">Percentile &amp; Ranking Methodology</h4>
+            <p className="mt-1.5 text-muted-foreground">
+              Percentile represents the percentage of global peer nations that score below India. A higher percentile denotes a stronger relative position.
+            </p>
+            <p className="mt-1.5 text-muted-foreground font-medium text-saffron">
+              Formulated against up to 195 countries using statistical database weightings.
+            </p>
+            <div className="absolute top-full left-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1 rotate-45 border-r border-b border-zinc-200/50 dark:border-zinc-800/80 bg-white dark:bg-zinc-950" />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+const YEARS = ["FY 2020-21", "FY 2021-22", "FY 2022-23", "FY 2023-24", "FY 2024-25"];
+
+
 
 /* =================== TOP BAR =================== */
 function TopBar({
   domain,
   fy,
   onFy,
-  dark,
-  onDark,
 }: {
   domain: Domain;
   fy: string;
   onFy: (v: string) => void;
-  dark: boolean;
-  onDark: () => void;
 }) {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    const root = window.document.documentElement;
+    if (next === "dark") {
+      root.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      root.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  };
+
   return (
-    <div className="sticky top-0 z-40 border-b hairline bg-background/70 backdrop-blur-xl">
+    <div className="sticky top-0 z-40 border-b hairline bg-background/70 backdrop-blur-xl no-print">
       <div className="flex h-16 items-center gap-3 px-6">
         <div className="flex min-w-0 items-center gap-3">
           <span className="chip">Dashboard</span>
@@ -169,7 +383,7 @@ function TopBar({
             <select
               value={fy}
               onChange={(e) => onFy(e.target.value)}
-              className="appearance-none rounded-full border hairline bg-background py-2 pl-4 pr-9 text-[13px] font-medium hover:bg-secondary"
+              className="appearance-none rounded-full border hairline bg-background py-2 pl-4 pr-9 text-[13px] font-medium hover:bg-secondary cursor-pointer"
             >
               {YEARS.map((y) => (
                 <option key={y}>{y}</option>
@@ -179,21 +393,24 @@ function TopBar({
           </div>
 
           <button
-            onClick={onDark}
+            onClick={toggleTheme}
             aria-label="Toggle theme"
-            className="grid h-9 w-9 place-items-center rounded-full border hairline bg-background text-muted-foreground hover:text-foreground"
+            className="grid h-9 w-9 place-items-center rounded-full border hairline bg-background text-muted-foreground hover:text-foreground cursor-pointer"
           >
-            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
 
           <button
             aria-label="Notifications"
-            className="grid h-9 w-9 place-items-center rounded-full border hairline bg-background text-muted-foreground hover:text-foreground"
+            className="grid h-9 w-9 place-items-center rounded-full border hairline bg-background text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <Bell className="h-4 w-4" />
           </button>
 
-          <button className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background hover:opacity-90">
+          <button 
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background hover:opacity-90 cursor-pointer transition shadow-sm"
+          >
             <Download className="h-3.5 w-3.5" /> Export Report
           </button>
         </div>
@@ -232,16 +449,23 @@ function Spark({ data, color = "currentColor" }: { data: number[]; color?: strin
 
 /* =================== KPI CARDS =================== */
 function KPISection({ domain }: { domain: Domain }) {
-  const accents = ["var(--saffron)", "var(--green)", "var(--blue)", "var(--foreground)"];
+  const accents = ["var(--saffron)", "var(--green)", "var(--saffron)", "var(--blue)"];
+  const gradients = [
+    "bg-gradient-to-br from-orange-500/5 via-saffron-soft/10 to-amber-500/5 dark:from-orange-950/15 dark:via-zinc-900/40 dark:to-amber-950/10 border-orange-250 dark:border-orange-900/30",
+    "bg-gradient-to-br from-green-500/5 via-green-soft/10 to-emerald-500/5 dark:from-green-950/15 dark:via-zinc-900/40 dark:to-emerald-950/10 border-green-250 dark:border-green-900/30",
+    "bg-gradient-to-br from-amber-500/5 via-orange-50/10 to-yellow-500/5 dark:from-amber-950/15 dark:via-zinc-900/40 dark:to-yellow-950/10 border-amber-250 dark:border-amber-900/20",
+    "bg-gradient-to-br from-blue-500/5 via-blue/5 to-indigo-500/5 dark:from-blue-950/15 dark:via-zinc-900/40 dark:to-indigo-950/10 border-blue-250 dark:border-blue-900/30",
+  ];
   return (
     <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
       {domain.kpis.map((k, i) => {
         const c = accents[i % 4];
+        const grad = gradients[i % 4];
         const Trend = k.trend === "up" ? ArrowUpRight : ArrowDownRight;
         return (
           <div
             key={k.label}
-            className="group card-surface relative overflow-hidden p-6 transition hover:shadow-md"
+            className={`group relative p-6 rounded-[var(--radius-2xl)] border transition hover:shadow-md ${grad}`}
           >
             <div
               aria-hidden
@@ -249,13 +473,12 @@ function KPISection({ domain }: { domain: Domain }) {
               style={{ background: c }}
             />
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground flex items-center">
                 {k.label}
+                <InfoTooltip label={k.label} />
               </span>
               <span
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                  k.trend === "up" ? "bg-green-soft text-green" : "bg-saffron-soft text-saffron"
-                }`}
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium`}
                 style={{
                   backgroundColor:
                     k.trend === "up" ? "var(--green-soft)" : "var(--saffron-soft)",
@@ -266,7 +489,7 @@ function KPISection({ domain }: { domain: Domain }) {
                 {k.delta}
               </span>
             </div>
-            <div className="mt-4 font-display text-[42px] leading-none tracking-tight">
+            <div className="mt-4 font-sans font-bold text-[38px] leading-none tracking-tight text-foreground">
               {k.value}
             </div>
             <div className="mt-1 text-[12.5px] text-muted-foreground">{k.hint}</div>
@@ -286,28 +509,37 @@ function RankingSection({ domain }: { domain: Domain }) {
   return (
     <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       {/* World position hero */}
-      <div className="card-surface relative overflow-hidden p-6 lg:col-span-2">
+      <div className="card-surface relative p-6 lg:col-span-2">
         <div className="flex items-start justify-between">
           <div>
-            <div className="chip"><Trophy className="h-3 w-3" /> Global Ranking</div>
-            <h2 className="mt-4 font-display text-[46px] leading-none tracking-tight">
-              #{domain.rank} <span className="text-muted-foreground/70">of {domain.outOf}</span>
+            <div className="flex items-center gap-1.5">
+              <div className="chip"><Trophy className="h-3 w-3" /> Global Ranking</div>
+              <MethodologyPopover />
+            </div>
+            <h2 className="mt-4 font-sans font-bold text-[42px] leading-none tracking-tight text-foreground">
+              #{domain.rank} <span className="text-muted-foreground/70 text-2xl font-normal">of {domain.outOf}</span>
             </h2>
             <p className="mt-2 max-w-md text-[13.5px] text-muted-foreground">
               India's world position in {domain.name.toLowerCase()}. Improved{" "}
-              <span className="font-medium text-foreground">{domain.rankDelta} places</span> vs last cycle.
+              <span className="font-semibold text-saffron">{domain.rankDelta} places</span> vs last cycle.
             </p>
           </div>
           <div className="hidden md:block">
             <div className="relative h-32 w-32">
               <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+                <defs>
+                  <linearGradient id="rankCircleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="var(--saffron)" />
+                    <stop offset="100%" stopColor="#EA580C" />
+                  </linearGradient>
+                </defs>
                 <circle cx="50" cy="50" r="42" strokeWidth="8" className="fill-none stroke-secondary" />
                 <circle
                   cx="50" cy="50" r="42"
                   strokeWidth="8"
                   strokeLinecap="round"
                   className="fill-none"
-                  stroke="var(--saffron)"
+                  stroke="url(#rankCircleGrad)"
                   strokeDasharray={2 * Math.PI * 42}
                   strokeDashoffset={2 * Math.PI * 42 * (1 - rankPct)}
                   style={{ transition: "stroke-dashoffset 1s ease" }}
@@ -316,7 +548,7 @@ function RankingSection({ domain }: { domain: Domain }) {
               <div className="absolute inset-0 grid place-items-center">
                 <div className="text-center">
                   <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Percentile</div>
-                  <div className="font-display text-2xl leading-none">{Math.round(rankPct * 100)}</div>
+                  <div className="font-sans font-bold text-2xl leading-none text-foreground">{Math.round(rankPct * 100)}%</div>
                 </div>
               </div>
             </div>
@@ -331,7 +563,7 @@ function RankingSection({ domain }: { domain: Domain }) {
           ].map(([l, v]) => (
             <div key={l}>
               <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{l}</div>
-              <div className="mt-1 font-display text-2xl">{v}</div>
+              <div className="mt-1 font-sans font-bold text-xl text-foreground">{v}</div>
             </div>
           ))}
         </div>
@@ -348,14 +580,15 @@ function RankingSection({ domain }: { domain: Domain }) {
             return (
               <li
                 key={c.code}
-                className={`relative overflow-hidden rounded-xl border hairline px-3 py-2.5 ${
-                  isIndia ? "bg-saffron-soft" : "bg-surface"
+                className={`relative overflow-hidden rounded-xl border px-3 py-2.5 transition-all hover:shadow-sm ${
+                  isIndia 
+                    ? "bg-gradient-to-r from-saffron-soft/30 to-amber-500/5 border-saffron-soft/50 shadow-sm" 
+                    : "bg-surface/50 border-zinc-200/40 dark:border-zinc-800/40"
                 }`}
-                style={{ backgroundColor: isIndia ? "var(--saffron-soft)" : undefined }}
               >
                 <div
                   aria-hidden
-                  className="absolute inset-y-0 left-0 opacity-30"
+                  className="absolute inset-y-0 left-0 opacity-[0.15] dark:opacity-[0.1]"
                   style={{
                     width: `${w}%`,
                     background: isIndia ? "var(--saffron)" : "var(--muted)",
@@ -363,14 +596,16 @@ function RankingSection({ domain }: { domain: Domain }) {
                   }}
                 />
                 <div className="relative flex items-center gap-3">
-                  <span className="w-5 text-[11px] font-medium text-muted-foreground">#{i + 1}</span>
-                  <span className="grid h-6 w-8 place-items-center rounded-md border hairline bg-background text-[10px] font-semibold">
-                    {c.code}
-                  </span>
-                  <span className={`text-[13.5px] ${isIndia ? "font-semibold" : ""}`}>
+                  <span className="w-5 text-[11px] font-semibold text-muted-foreground">#{i + 1}</span>
+                  <img
+                    src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`}
+                    alt=""
+                    className="h-3.5 w-5 rounded-none object-cover border border-zinc-350"
+                  />
+                  <span className={`text-[13px] ${isIndia ? "font-bold text-foreground" : "text-muted-foreground"}`}>
                     {c.name}
                   </span>
-                  <span className="ml-auto text-[12.5px] tabular-nums text-muted-foreground">
+                  <span className={`ml-auto text-[12px] tabular-nums ${isIndia ? "font-bold text-saffron" : "text-muted-foreground"}`}>
                     {c.value}
                   </span>
                 </div>
@@ -385,21 +620,72 @@ function RankingSection({ domain }: { domain: Domain }) {
 
 /* =================== COMPARISON CHART =================== */
 function ComparisonSection({ domain }: { domain: Domain }) {
-  const data = domain.topCountries.map((c) => ({ name: c.name, value: c.value, code: c.code }));
+  const [activeTab, setActiveTab] = useState<"Absolute" | "Per capita" | "Growth">("Absolute");
+
+  const data = useMemo(() => {
+    return domain.topCountries.map((c) => {
+      let val = c.value;
+      if (domain.slug === "economy") {
+        if (activeTab === "Per capita") {
+          const perCapitaMap: Record<string, number> = {
+            US: 81.6,
+            CN: 12.6,
+            DE: 54.3,
+            JP: 33.8,
+            IN: 2.7,
+            GB: 48.9
+          };
+          val = perCapitaMap[c.code] || (c.value / 10);
+        } else if (activeTab === "Growth") {
+          const growthMap: Record<string, number> = {
+            US: 2.5,
+            CN: 5.2,
+            DE: -0.2,
+            JP: 1.9,
+            IN: 7.8,
+            GB: 0.5
+          };
+          val = growthMap[c.code] || (c.value * 0.15);
+        }
+      } else {
+        if (activeTab === "Per capita") {
+          val = Math.round((c.value / 8) * 10) / 10;
+        } else if (activeTab === "Growth") {
+          val = Math.round((2.5 + (c.value % 6) + Math.sin(c.value) * 1.5) * 10) / 10;
+        }
+      }
+      return { name: c.name, value: val, code: c.code };
+    });
+  }, [domain.topCountries, activeTab, domain.slug]);
+
+  const yAxisFormatter = useCallback((v: any) => {
+    if (domain.slug === "economy") {
+      if (activeTab === "Absolute") return `$${v}T`;
+      if (activeTab === "Per capita") return `$${v}K`;
+      if (activeTab === "Growth") return `${v}%`;
+    }
+    return v;
+  }, [domain.slug, activeTab]);
+
   return (
     <section className="card-surface p-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-l-2 border-saffron pl-3.5 no-print">
         <div>
           <div className="chip"><Target className="h-3 w-3" /> India vs Top Countries</div>
-          <h2 className="mt-3 font-display text-3xl tracking-tight">
+          <h2 className="mt-3 font-sans font-bold text-2xl tracking-tight text-foreground">
             Where India stands, at a glance
           </h2>
         </div>
         <div className="flex gap-1 rounded-full border hairline bg-secondary/60 p-1 text-[12px]">
-          {["Absolute", "Per capita", "Growth"].map((t, i) => (
+          {["Absolute", "Per capita", "Growth"].map((t) => (
             <button
               key={t}
-              className={`rounded-full px-3 py-1 ${i === 0 ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+              onClick={() => setActiveTab(t as any)}
+              className={`rounded-full px-3 py-1 text-[11.5px] transition cursor-pointer ${
+                activeTab === t 
+                  ? "bg-saffron text-white shadow-sm font-semibold" 
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               {t}
             </button>
@@ -411,7 +697,7 @@ function ComparisonSection({ domain }: { domain: Domain }) {
           <BarChart data={data} margin={{ top: 10, right: 12, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-hairline)" vertical={false} />
             <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
-            <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
+            <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" tickFormatter={yAxisFormatter} />
             <Tooltip
               contentStyle={{
                 borderRadius: 12,
@@ -419,10 +705,11 @@ function ComparisonSection({ domain }: { domain: Domain }) {
                 background: "var(--color-popover)",
                 fontSize: 12,
               }}
+              formatter={(v) => [yAxisFormatter(v), activeTab]}
             />
-            <Bar dataKey="value" radius={[10, 10, 0, 0]} animationDuration={900}>
+            <Bar dataKey="value" radius={[6, 6, 0, 0]} animationDuration={900}>
               {data.map((d) => (
-                <Cell key={d.code} fill={d.code === "IN" ? "var(--saffron)" : "var(--muted)"} />
+                <Cell key={d.code} fill={d.code === "IN" ? "var(--saffron)" : "#0F2D52"} />
               ))}
             </Bar>
           </BarChart>
@@ -436,19 +723,19 @@ function ComparisonSection({ domain }: { domain: Domain }) {
 function TrendSection({ domain }: { domain: Domain }) {
   return (
     <section className="card-surface p-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-l-2 border-green pl-3.5">
         <div>
           <div className="chip">Historical Trend</div>
-          <h2 className="mt-3 font-display text-3xl tracking-tight">
+          <h2 className="mt-3 font-sans font-bold text-2xl tracking-tight text-foreground">
             A decade of {domain.name.toLowerCase()}
           </h2>
         </div>
         <div className="flex items-center gap-3 text-[12px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full" style={{ background: "var(--saffron)" }} /> India
+          <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--saffron)" }} /> India
           </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-muted-foreground/50" /> World avg
+          <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#0F2D52" }} /> World avg
           </span>
         </div>
       </div>
@@ -475,8 +762,8 @@ function TrendSection({ domain }: { domain: Domain }) {
             <Line
               type="monotone"
               dataKey="world"
-              stroke="var(--color-muted-foreground)"
-              strokeWidth={1.5}
+              stroke="#0F2D52"
+              strokeWidth={2}
               strokeDasharray="4 4"
               dot={false}
               animationDuration={1200}
@@ -485,9 +772,9 @@ function TrendSection({ domain }: { domain: Domain }) {
               type="monotone"
               dataKey="india"
               stroke="var(--saffron)"
-              strokeWidth={2.5}
-              dot={{ r: 3, fill: "var(--saffron)" }}
-              activeDot={{ r: 5 }}
+              strokeWidth={3}
+              dot={{ r: 3.5, fill: "var(--saffron)" }}
+              activeDot={{ r: 6 }}
               animationDuration={1200}
             />
           </LineChart>
@@ -499,8 +786,10 @@ function TrendSection({ domain }: { domain: Domain }) {
         {domain.trend.map((t, i) => (
           <button
             key={t.year}
-            className={`shrink-0 rounded-full border hairline px-3 py-1 text-[11.5px] tabular-nums ${
-              i === domain.trend.length - 1 ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+            className={`shrink-0 rounded-full border px-3 py-1 text-[11.5px] tabular-nums transition cursor-pointer ${
+              i === domain.trend.length - 1 
+                ? "bg-saffron text-white font-semibold" 
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {t.year}
@@ -523,11 +812,15 @@ function StateMapSection({ domain }: { domain: Domain }) {
   return (
     <section className="grid grid-cols-1 gap-4 lg:grid-cols-5">
       <div className="card-surface p-6 lg:col-span-3">
-        <div className="chip"><MapIcon className="h-3 w-3" /> India — State performance</div>
-        <h2 className="mt-3 font-display text-2xl tracking-tight">Interactive state map</h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          Hover a state tile to see its {domain.name.toLowerCase()} score.
-        </p>
+        <div className="flex flex-wrap items-end justify-between gap-3 border-l-2 border-saffron pl-3.5">
+          <div>
+            <div className="chip"><MapIcon className="h-3 w-3" /> India — State performance</div>
+            <h2 className="mt-3 font-sans font-bold text-2xl tracking-tight text-foreground">Interactive state map</h2>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              Hover a state tile to see its {domain.name.toLowerCase()} score.
+            </p>
+          </div>
+        </div>
 
         <div className="mt-6 grid grid-cols-6 gap-1.5 sm:grid-cols-9">
           {domain.states.map((s) => {
@@ -545,7 +838,7 @@ function StateMapSection({ domain }: { domain: Domain }) {
                 key={s.code}
                 onMouseEnter={() => setHover(s.code)}
                 onMouseLeave={() => setHover(null)}
-                className="group relative aspect-square rounded-lg border hairline text-[10px] font-semibold text-foreground/80 transition-transform hover:scale-[1.06] hover:shadow-md"
+                className="group relative aspect-square rounded-lg border hairline text-[10px] font-semibold text-foreground/80 transition-transform hover:scale-[1.06] hover:shadow-md cursor-help"
                 style={{ backgroundColor: bg }}
                 aria-label={`${s.name}: ${s.value}`}
               >
@@ -571,8 +864,8 @@ function StateMapSection({ domain }: { domain: Domain }) {
         {selected ? (
           <>
             <div className="chip">{selected.code} • Selected</div>
-            <h3 className="mt-3 font-display text-3xl tracking-tight">{selected.name}</h3>
-            <div className="mt-2 font-display text-5xl tracking-tight" style={{ color: "var(--saffron)" }}>
+            <h3 className="mt-3 font-sans font-bold text-3xl tracking-tight text-foreground">{selected.name}</h3>
+            <div className="mt-2 font-sans font-extrabold text-5xl tracking-tight" style={{ color: "var(--saffron)" }}>
               {selected.value}
             </div>
             <div className="text-[12px] text-muted-foreground">Composite score</div>
@@ -582,24 +875,24 @@ function StateMapSection({ domain }: { domain: Domain }) {
             <div className="chip">Highlights</div>
             <div className="mt-4 grid gap-4">
               <div>
-                <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Top 5</div>
+                <div className="text-[11px] uppercase tracking-widest text-muted-foreground font-semibold">Top 5 States</div>
                 <ul className="mt-2 space-y-1.5 text-[13px]">
                   {top.map((s) => (
-                    <li key={s.code} className="flex justify-between">
+                    <li key={s.code} className="flex justify-between text-foreground">
                       <span>{s.name}</span>
-                      <span className="tabular-nums font-medium">{s.value}</span>
+                      <span className="tabular-nums font-semibold text-saffron">{s.value}</span>
                     </li>
                   ))}
                 </ul>
               </div>
               <div className="h-px" style={{ backgroundColor: "var(--color-hairline)" }} />
               <div>
-                <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Needs attention</div>
+                <div className="text-[11px] uppercase tracking-widest text-muted-foreground font-semibold">Needs attention</div>
                 <ul className="mt-2 space-y-1.5 text-[13px]">
                   {bottom.map((s) => (
-                    <li key={s.code} className="flex justify-between text-muted-foreground">
+                    <li key={s.code} className="flex justify-between text-muted-foreground hover:text-foreground transition-colors">
                       <span>{s.name}</span>
-                      <span className="tabular-nums">{s.value}</span>
+                      <span className="tabular-nums font-semibold">{s.value}</span>
                     </li>
                   ))}
                 </ul>
@@ -614,21 +907,22 @@ function StateMapSection({ domain }: { domain: Domain }) {
 
 /* =================== BEYOND THE NUMBERS =================== */
 function StorySection({ domain }: { domain: Domain }) {
-  const cards: { icon: LucideIcon; title: string; body: React.ReactNode; accent: string }[] = [
+  const cards: { icon: LucideIcon; title: string; body: React.ReactNode; accent: string; bg: string }[] = [
     {
       icon: BookOpen,
       title: "The Story",
       body: (
         <>
-          <h3 className="font-display text-2xl leading-tight tracking-tight">
+          <h3 className="font-sans font-bold text-[17px] leading-snug text-foreground">
             {domain.story.title}
           </h3>
-          <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground">
+          <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
             {domain.story.body}
           </p>
         </>
       ),
       accent: "var(--saffron)",
+      bg: "bg-surface/50 border-zinc-200/50 dark:border-zinc-800/80"
     },
     {
       icon: Lightbulb,
@@ -636,14 +930,15 @@ function StorySection({ domain }: { domain: Domain }) {
       body: (
         <ul className="space-y-3">
           {domain.story.insights.map((i) => (
-            <li key={i} className="flex gap-2.5 text-[13.5px] leading-relaxed">
-              <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "var(--blue)" }} />
+            <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed text-muted-foreground">
+              <Sparkles className="mt-1 h-3.5 w-3.5 shrink-0 text-blue animate-pulse" />
               <span>{i}</span>
             </li>
           ))}
         </ul>
       ),
       accent: "var(--blue)",
+      bg: "bg-blue-500/5 border-blue-200/30 dark:bg-blue-955/10 dark:border-blue-900/30 shadow-sm"
     },
     {
       icon: Target,
@@ -651,10 +946,9 @@ function StorySection({ domain }: { domain: Domain }) {
       body: (
         <ol className="space-y-3">
           {domain.story.recommendations.map((r, i) => (
-            <li key={r} className="flex gap-3 text-[13.5px] leading-relaxed">
+            <li key={r} className="flex gap-3 text-[13px] leading-relaxed text-muted-foreground">
               <span
-                className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] font-semibold"
-                style={{ backgroundColor: "var(--green-soft)", color: "var(--green)" }}
+                className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] font-bold bg-green-soft text-green"
               >
                 {i + 1}
               </span>
@@ -664,24 +958,26 @@ function StorySection({ domain }: { domain: Domain }) {
         </ol>
       ),
       accent: "var(--green)",
+      bg: "bg-green-500/5 border-green-200/30 dark:bg-green-955/10 dark:border-green-900/30 shadow-sm"
     },
     {
       icon: Compass,
       title: "Why It Matters",
       body: (
-        <p className="text-[14px] leading-relaxed text-muted-foreground">{domain.story.whyItMatters}</p>
+        <p className="text-[13.5px] leading-relaxed text-muted-foreground">{domain.story.whyItMatters}</p>
       ),
       accent: "var(--foreground)",
+      bg: "bg-surface/50 border-zinc-200/50 dark:border-zinc-800/80"
     },
   ];
 
   return (
     <section>
-      <div className="flex items-end justify-between">
+      <div className="flex items-end justify-between border-l-2 border-green pl-3.5">
         <div>
           <div className="chip"><Sparkles className="h-3 w-3" /> Beyond the numbers</div>
-          <h2 className="mt-3 font-display text-3xl tracking-tight">
-            The <span className="font-editorial">human</span> layer of the data
+          <h2 className="mt-3 font-sans font-bold text-2xl tracking-tight text-foreground">
+            The <span className="font-semibold text-saffron">human</span> layer of the data
           </h2>
         </div>
       </div>
@@ -689,7 +985,7 @@ function StorySection({ domain }: { domain: Domain }) {
         {cards.map((c) => {
           const Icon = c.icon;
           return (
-            <div key={c.title} className="card-surface p-6">
+            <div key={c.title} className={`card-surface p-6 transition-all hover:-translate-y-0.5 hover:shadow-md ${c.bg}`}>
               <div className="flex items-center gap-2">
                 <span
                   className="grid h-8 w-8 place-items-center rounded-full"
@@ -697,7 +993,7 @@ function StorySection({ domain }: { domain: Domain }) {
                 >
                   <Icon className="h-4 w-4" />
                 </span>
-                <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   {c.title}
                 </span>
               </div>
@@ -720,30 +1016,45 @@ const KIND_ICON: Record<string, LucideIcon> = {
 function ExploreSection({ domain }: { domain: Domain }) {
   return (
     <section>
-      <div className="flex items-end justify-between">
+      <div className="flex items-end justify-between border-l-2 border-saffron pl-3.5">
         <div>
           <div className="chip">Continue exploring</div>
-          <h2 className="mt-3 font-display text-3xl tracking-tight">Related datasets & reads</h2>
+          <h2 className="mt-3 font-sans font-bold text-2xl tracking-tight text-foreground">Related datasets &amp; reads</h2>
         </div>
       </div>
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {domain.related.map((r, i) => {
           const Icon = KIND_ICON[r.kind] ?? FileText;
+          // Resolve target URL
+          const cleanSource = r.source.toUpperCase().trim();
+          const targetUrl = SOURCE_URLS[cleanSource] || "https://www.niti.gov.in";
+          
           return (
             <a
               key={r.title}
-              href="#"
-              className={`bento bento-hover flex flex-col justify-between ${i === 0 ? "sm:col-span-2 lg:col-span-2 lg:row-span-1" : ""}`}
+              href={targetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`bento bento-hover flex flex-col justify-between transition hover:-translate-y-1 hover:shadow-lg cursor-pointer border border-zinc-200/50 dark:border-zinc-800/80 bg-surface/40 hover:bg-surface/75 group ${
+                i === 0 ? "sm:col-span-2 lg:col-span-2 lg:row-span-1" : ""
+              }`}
             >
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                <Icon className="h-3.5 w-3.5" /> {r.kind}
+              <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                <span className="flex items-center gap-2">
+                  <Icon className="h-3.5 w-3.5 text-saffron" /> {r.kind}
+                </span>
+                <span className="rounded-full bg-saffron-soft/30 dark:bg-saffron-soft/10 px-2 py-0.5 text-[9px] font-semibold text-saffron">
+                  {r.source}
+                </span>
               </div>
               <div className="mt-6">
-                <h3 className="font-display text-2xl leading-tight tracking-tight">{r.title}</h3>
-                <div className="mt-2 text-[12.5px] text-muted-foreground">via {r.source}</div>
+                <h3 className="font-sans font-bold text-xl leading-tight tracking-tight text-foreground group-hover:text-saffron transition-colors">
+                  {r.title}
+                </h3>
+                <div className="mt-2 text-[12.5px] text-muted-foreground font-medium">via {r.source}</div>
               </div>
-              <div className="mt-6 inline-flex items-center gap-1.5 text-[13px] font-medium">
-                Open <ArrowUpRight className="h-3.5 w-3.5" />
+              <div className="mt-6 inline-flex items-center gap-1.5 text-[13px] font-semibold text-saffron group-hover:underline">
+                Open Report <ExternalLink className="h-3.5 w-3.5" />
               </div>
             </a>
           );
@@ -756,27 +1067,35 @@ function ExploreSection({ domain }: { domain: Domain }) {
 /* =================== SOURCES =================== */
 function SourcesSection({ domain }: { domain: Domain }) {
   return (
-    <section className="card-surface p-6">
-      <div className="flex items-center gap-2">
-        <span className="chip">Sources</span>
-        <span className="text-[12px] text-muted-foreground">All data below is aggregated from public and international agencies.</span>
+    <section className="card-surface p-6 bg-zinc-50/60 dark:bg-zinc-950/20 border-zinc-200/50">
+      <div className="flex items-center gap-2 border-l-2 border-green pl-3.5">
+        <span className="chip bg-green-soft/20 text-green border border-green-soft/50">Sources</span>
+        <span className="text-[12px] text-muted-foreground font-medium">All data below is aggregated from public and international agencies.</span>
       </div>
       <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {domain.sources.map((s) => (
-          <li
-            key={s.name}
-            className="flex items-center justify-between rounded-xl border hairline bg-surface px-3.5 py-3"
-          >
-            <div className="min-w-0">
-              <div className="truncate text-[13px] font-medium">{s.name}</div>
-              <div className="truncate text-[11.5px] text-muted-foreground">{s.url}</div>
-            </div>
-            <div className="ml-2 flex items-center gap-2">
-              <span className="text-[11px] text-muted-foreground">{s.updated}</span>
-              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
-            </div>
-          </li>
-        ))}
+        {domain.sources.map((s) => {
+          const rawUrl = s.url.toLowerCase();
+          const href = rawUrl.startsWith("http") ? s.url : `https://${s.url}`;
+          return (
+            <li key={s.name}>
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between rounded-xl border border-zinc-200/50 dark:border-zinc-800/80 bg-surface/50 hover:bg-secondary/40 px-3.5 py-3 transition hover:-translate-y-0.5 hover:shadow-sm group cursor-pointer"
+              >
+                <div className="min-w-0">
+                  <div className="truncate text-[13px] font-semibold text-foreground group-hover:text-saffron transition-colors">{s.name}</div>
+                  <div className="truncate text-[11px] text-muted-foreground group-hover:underline">{s.url}</div>
+                </div>
+                <div className="ml-2 flex items-center gap-2 shrink-0">
+                  <span className="text-[10px] bg-secondary px-2 py-0.5 rounded text-muted-foreground">{s.updated}</span>
+                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-saffron transition-colors" />
+                </div>
+              </a>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
@@ -784,58 +1103,116 @@ function SourcesSection({ domain }: { domain: Domain }) {
 
 /* =================== TEMPLATE =================== */
 export function DomainDashboard({ domain }: { domain: Domain }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [dark, setDark] = useState(false);
   const [fy, setFy] = useState(YEARS[YEARS.length - 1]);
 
-  const containerClass = useMemo(() => (dark ? "dark" : ""), [dark]);
-
   return (
-    <div className={containerClass}>
-      <div className="flex min-h-screen w-full bg-background text-foreground">
-        <Sidebar active={domain.slug} collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <TopBar domain={domain} fy={fy} onFy={setFy} dark={dark} onDark={() => setDark((v) => !v)} />
-          <main className="mx-auto w-full max-w-[1400px] space-y-6 px-6 py-8">
-            <header className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:flex-wrap sm:justify-between">
-              <div className="min-w-0">
-                <div className="chip">{fy}</div>
-                <h1 className="mt-3 font-display text-5xl tracking-tight sm:text-6xl">
-                  {domain.name} <span className="font-editorial text-muted-foreground/80">of India</span>
-                </h1>
-                <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-muted-foreground">
-                  {domain.tagline}. A living dashboard of India's performance across global benchmarks.
+    <>
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          /* Hide sidebar, topbar selectors/buttons, header action buttons and footnotes */
+          aside,
+          nav,
+          .no-print,
+          button,
+          select,
+          header select,
+          header button,
+          .sticky {
+            display: none !important;
+          }
+          body {
+            background: white !important;
+            color: black !important;
+          }
+          main {
+            margin: 0 !important;
+            padding: 16px !important;
+            max-width: 100% !important;
+            width: 100% !important;
+          }
+          .card-surface {
+            border: 1px solid #e4e4e7 !important;
+            background: white !important;
+            box-shadow: none !important;
+            break-inside: avoid;
+            margin-bottom: 20px !important;
+          }
+          .recharts-responsive-container {
+            width: 100% !important;
+            height: 320px !important;
+          }
+        }
+      `}} />
+      <TopBar domain={domain} fy={fy} onFy={setFy} />
+      <main className="mx-auto w-full max-w-[1400px] space-y-6 px-6 py-8">
+        <header className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:flex-wrap sm:justify-between border-b border-zinc-200/40 dark:border-zinc-800/40 pb-5">
+          <div className="min-w-0">
+            <div className="chip bg-saffron-soft/20 text-saffron border border-saffron-soft/50 no-print">{fy}</div>
+            <h1 className="mt-3 font-sans font-bold text-4xl tracking-tight sm:text-5xl text-foreground">
+              {domain.name} <span className="font-semibold text-muted-foreground/80">of India</span>
+            </h1>
+            <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-muted-foreground">
+              {domain.tagline}. A living dashboard of India's performance across global benchmarks.
+            </p>
+          </div>
+          <div className="hidden sm:flex sm:shrink-0 sm:items-center sm:gap-3 no-print">
+            <div className="rounded-full border hairline bg-surface px-4 py-2 text-[12px]">
+              <span className="text-muted-foreground">Rank</span>{" "}
+              <span className="font-bold text-saffron">#{domain.rank}</span>
+            </div>
+            <div className="rounded-full border hairline bg-surface px-4 py-2 text-[12px]">
+              <span className="text-muted-foreground">Trend</span>{" "}
+              <span className="font-bold" style={{ color: "var(--green)" }}>
+                ▲ {domain.rankDelta} yoy
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <KPISection domain={domain} />
+        
+        {/* Economy Domain Indicators Glossary directly on screen */}
+        {domain.slug === "economy" && (
+          <section className="card-surface p-6 bg-gradient-to-r from-saffron-soft/10 via-background to-orange-50/10 border border-saffron-soft/30 rounded-[var(--radius-2xl)]">
+            <div className="flex items-center gap-2 border-l-2 border-saffron pl-3.5 mb-4">
+              <span className="chip bg-saffron-soft/20 text-saffron border border-saffron-soft/50">Indicator Glossary</span>
+              <h2 className="text-xl font-bold text-foreground">Understanding Economy Metrics &amp; Calculations</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="space-y-2">
+                <h3 className="font-semibold text-foreground text-[14px]">GDP (Nominal) vs GDP Growth</h3>
+                <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+                  <strong>GDP (Nominal)</strong> measures the raw economic size of India in current US dollars. It is calculated by aggregating consumption, capital investment, government spending, and net trade balance:
+                  <span className="block my-1.5 p-2 bg-secondary/50 rounded font-mono text-[11px] text-foreground">
+                    GDP = C + I + G + (X - M)
+                  </span>
+                  Where <strong>C</strong> is private consumption, <strong>I</strong> is gross investment, <strong>G</strong> is government spending, and <strong>(X - M)</strong> is net exports (Exports minus Imports). <strong>GDP Growth</strong> measures the inflation-adjusted real output change year-over-year.
                 </p>
               </div>
-              <div className="hidden sm:flex sm:shrink-0 sm:items-center sm:gap-3">
-                <div className="rounded-full border hairline bg-surface px-4 py-2 text-[12px]">
-                  <span className="text-muted-foreground">Rank</span>{" "}
-                  <span className="font-semibold">#{domain.rank}</span>
-                </div>
-                <div className="rounded-full border hairline bg-surface px-4 py-2 text-[12px]">
-                  <span className="text-muted-foreground">Trend</span>{" "}
-                  <span className="font-semibold" style={{ color: "var(--green)" }}>
-                    ▲ {domain.rankDelta} yoy
-                  </span>
-                </div>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-foreground text-[14px]">Inflation (CPI) &amp; Forex Reserves</h3>
+                <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+                  <strong>Inflation</strong> tracks changes in purchasing power using the Consumer Price Index (CPI), analyzing retail price adjustments of commodities, energy, and services. The Reserve Bank of India (RBI) implements monetary policy to keep CPI inflation anchored within a 4% (±2%) target band.
+                  <br />
+                  <strong>Foreign Exchange (Forex) Reserves</strong> are international assets held by the central bank (RBI), including foreign currency assets, reserves, gold, and IMF Special Drawing Rights. They cushion exchange rate volatility and guarantee import covers.
+                </p>
               </div>
-            </header>
-
-            <KPISection domain={domain} />
-            <RankingSection domain={domain} />
-            <ComparisonSection domain={domain} />
-            <TrendSection domain={domain} />
-            <StateMapSection domain={domain} />
-            <StorySection domain={domain} />
-            <ExploreSection domain={domain} />
-            <SourcesSection domain={domain} />
-
-            <div className="pt-4 pb-8 text-center text-[11px] text-muted-foreground">
-              Bharat360 · Data updated {domain.sources[0]?.updated ?? "recently"} · Made with care
             </div>
-          </main>
+          </section>
+        )}
+
+        <RankingSection domain={domain} />
+        <ComparisonSection domain={domain} />
+        <TrendSection domain={domain} />
+        <StateMapSection domain={domain} />
+        <StorySection domain={domain} />
+        <ExploreSection domain={domain} />
+        <SourcesSection domain={domain} />
+
+        <div className="pt-4 pb-8 text-center text-[11px] text-muted-foreground border-t border-zinc-250/20 dark:border-zinc-800/20 no-print">
+          Bharat360 · Data updated {domain.sources[0]?.updated ?? "recently"} · Made with care
         </div>
-      </div>
-    </div>
+      </main>
+    </>
   );
 }

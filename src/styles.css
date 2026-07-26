@@ -180,9 +180,8 @@
 
 /* Editorial serif accent — for italic display words */
 @utility font-editorial {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-style: italic;
+  font-family: var(--font-sans);
+  font-weight: 500;
   letter-spacing: -0.02em;
 }
 

@@ -98,6 +98,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+import { useState } from "react";
+import { Sidebar } from "@/components/site/Sidebar";
+import { useRouterState } from "@tanstack/react-router";
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
@@ -114,11 +118,38 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const [collapsed, setCollapsed] = useState(false);
+  const routerState = useRouterState();
+  const pathname = routerState.location.pathname;
+
+  // Extract active domain from pathname if on a dashboard page
+  const match = pathname.match(/^\/dashboard\/([^/]+)/);
+  const activeDomain = match ? match[1] : undefined;
+
+  // Initialize theme from localStorage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") || "light";
+    const root = window.document.documentElement;
+    if (savedTheme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="flex min-h-screen w-full bg-background text-foreground transition-colors duration-300">
+        <Sidebar
+          collapsed={collapsed}
+          onToggle={() => setCollapsed(!collapsed)}
+          activeDomain={activeDomain}
+        />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Outlet />
+        </div>
+      </div>
     </QueryClientProvider>
   );
 }
+
