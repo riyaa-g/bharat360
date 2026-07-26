@@ -1612,17 +1612,17 @@ export function DomainDashboard({ domain }: { domain: Domain }) {
         }
       `}} />
       <TopBar domain={activeDomainData} fy={fy} onFy={setFy} />
-      <main className="mx-auto w-full max-w-[1400px] pb-10">
+      <main className="mx-auto w-full max-w-[1400px] pb-10 px-6 lg:px-10">
         
         {/* Back Link */}
-        <div className="px-6 pt-6 no-print">
+        <div className="pt-6 no-print">
           <Link to="/" hash="domains" className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-foreground dark:text-white hover:opacity-80 transition-opacity w-fit">
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to all domains
           </Link>
         </div>
 
-        <header className="px-6 mt-6 lg:mt-8 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:flex-wrap sm:justify-between border-b border-zinc-200/40 dark:border-zinc-800/40 pb-5">
+        <header className="mt-6 lg:mt-8 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:flex-wrap sm:justify-between border-b border-zinc-200/40 dark:border-zinc-800/40 pb-5">
           <div className="min-w-0">
             <div className="chip bg-saffron-soft/20 text-saffron border border-saffron-soft/50 no-print">{fy}</div>
             <h1 className="mt-3 font-sans font-bold text-4xl tracking-tight sm:text-5xl text-foreground">
@@ -1646,53 +1646,55 @@ export function DomainDashboard({ domain }: { domain: Domain }) {
           </div>
         </header>
 
-        <div id="kpi-section">
-          <KPISection domain={activeDomainData} />
-        </div>
-        
-        {/* Dynamic On-Screen Indicators Glossary for ALL domains */}
-        {GLOSSARY_DATA[domain.slug] && (
-          <section id="glossary-section" className="card-surface p-6 bg-gradient-to-r from-saffron-soft/10 via-background to-orange-50/10 border border-saffron-soft/30 rounded-[var(--radius-2xl)]">
-            <div className="flex items-center gap-2 border-l-2 border-saffron pl-3.5 mb-4">
-              <span className="chip bg-saffron-soft/20 text-saffron border border-saffron-soft/50">Indicator Glossary</span>
-              <h2 className="text-xl font-bold text-foreground">Understanding {domain.name} Metrics &amp; Calculations</h2>
-            </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              {GLOSSARY_DATA[domain.slug].map((g, idx) => (
-                <div key={idx} className="space-y-2">
-                  <h3 className="font-semibold text-foreground text-[14.5px]">{g.term}</h3>
-                  <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-                    <strong>{g.term}</strong> {g.definition.toLowerCase()}
-                    {g.formula && (
-                      <span className="block my-1.5 p-2 bg-secondary/50 rounded font-mono text-[11px] text-foreground">
-                        {g.formula}
-                      </span>
-                    )}
-                    <br />
-                    {g.details}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+        <div className="mt-8 space-y-10 lg:space-y-12">
+          <div id="kpi-section">
+            <KPISection domain={activeDomainData} />
+          </div>
+          
+          {/* Dynamic On-Screen Indicators Glossary for ALL domains */}
+          {GLOSSARY_DATA[domain.slug] && (
+            <section id="glossary-section" className="card-surface p-6 bg-gradient-to-r from-saffron-soft/10 via-background to-orange-50/10 border border-saffron-soft/30 rounded-[var(--radius-2xl)]">
+              <div className="flex items-center gap-2 border-l-2 border-saffron pl-3.5 mb-4">
+                <span className="chip bg-saffron-soft/20 text-saffron border border-saffron-soft/50">Indicator Glossary</span>
+                <h2 className="text-xl font-bold text-foreground">Understanding {domain.name} Metrics &amp; Calculations</h2>
+              </div>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                {GLOSSARY_DATA[domain.slug].map((g, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <h3 className="font-semibold text-foreground text-[14.5px]">{g.term}</h3>
+                    <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+                      <strong>{g.term}</strong> {g.definition.toLowerCase()}
+                      {g.formula && (
+                        <span className="block my-1.5 p-2 bg-secondary/50 rounded font-mono text-[11px] text-foreground">
+                          {g.formula}
+                        </span>
+                      )}
+                      <br />
+                      {g.details}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
-        <div id="ranking-section">
-          <RankingSection domain={activeDomainData} />
+          <div id="ranking-section">
+            <RankingSection domain={activeDomainData} />
+          </div>
+          <div id="comparison-section">
+            <ComparisonSection domain={activeDomainData} />
+          </div>
+          <div id="trend-section">
+            <TrendSection domain={activeDomainData} />
+          </div>
+          <div id="state-map-section">
+            <StateMapSection domain={activeDomainData} />
+          </div>
+          
+          <StorySection domain={activeDomainData} />
+          <ExploreSection domain={activeDomainData} />
+          <SourcesSection domain={activeDomainData} />
         </div>
-        <div id="comparison-section">
-          <ComparisonSection domain={activeDomainData} />
-        </div>
-        <div id="trend-section">
-          <TrendSection domain={activeDomainData} />
-        </div>
-        <div id="state-map-section">
-          <StateMapSection domain={activeDomainData} />
-        </div>
-        
-        <StorySection domain={activeDomainData} />
-        <ExploreSection domain={activeDomainData} />
-        <SourcesSection domain={activeDomainData} />
 
         <div className="no-print mt-12 border-t hairline">
           <Footer />
