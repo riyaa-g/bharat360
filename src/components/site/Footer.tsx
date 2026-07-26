@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 export function Footer() {
   return (
     <footer className="border-t hairline">
@@ -13,7 +15,7 @@ export function Footer() {
         </div>
         <div className="flex items-center gap-6">
           <a href="#" className="hover:text-foreground">Methodology</a>
-          <a href="#" className="hover:text-foreground">Data sources</a>
+          <Link to="/datasets" className="hover:text-foreground">Data sources</Link>
           <a href="#" className="hover:text-foreground">Privacy</a>
           <span>© {new Date().getFullYear()}</span>
         </div>

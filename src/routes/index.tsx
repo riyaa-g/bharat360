@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Landmark,
   Scale,
+  Database,
   CloudRain,
   IndianRupee,
   ArrowUp,
@@ -864,6 +865,28 @@ function Domains() {
           {domains.map((d) => (
             <DomainCard key={d.name} d={d} />
           ))}
+          {/* Datasets Repository CTA Card */}
+          <div className="col-span-12 lg:col-span-6 group relative flex min-h-[220px] flex-col justify-between overflow-hidden rounded-[var(--radius-2xl)] border hairline bg-saffron/5 p-6 transition hover:-translate-y-[1px] hover:shadow-[var(--shadow-md)]">
+            <div className="relative flex flex-col items-start gap-4 h-full">
+              <div className="flex items-center gap-2.5">
+                <span className="grid h-9 w-9 place-items-center rounded-xl border hairline bg-saffron/10 text-saffron">
+                  <Database className="h-4.5 w-4.5" />
+                </span>
+                <h3 className="text-[17px] font-semibold tracking-tight text-foreground">Dataset Repository</h3>
+              </div>
+              <p className="text-[13.5px] text-muted-foreground max-w-sm mt-2 flex-1">
+                Explore the complete catalog of raw datasets powering Bharat360. Data is collected from trusted global sources including the World Bank, WHO, UNDP, Yale EPI, Oxford Insights, WIPO, and Our World in Data.
+              </p>
+              <div className="flex w-full items-end justify-end mt-4">
+                <Link
+                  to="/datasets"
+                  className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[12.5px] font-medium bg-saffron text-white transition hover:bg-saffron/90 shadow-md shadow-saffron/20"
+                >
+                  View Datasets <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

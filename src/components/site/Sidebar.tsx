@@ -9,6 +9,7 @@ import {
   Sun,
   Moon,
   Lightbulb,
+  Database,
 } from "lucide-react";
 import { DOMAIN_LIST } from "@/lib/domains";
 
@@ -164,8 +165,19 @@ export function Sidebar({ collapsed, onToggle, activeDomain }: SidebarProps) {
               )}
             </li>
 
-            {/* Compare Link */}
+            {/* Dataset Explorer Link */}
             <li className="pt-2">
+              <Link
+                to="/datasets"
+                className="flex items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] text-zinc-400 transition-colors hover:bg-white/5 hover:text-white [&.active]:bg-white/10 [&.active]:text-white"
+              >
+                <Database className="h-4 w-4 shrink-0" />
+                {!collapsed && <span className="truncate">Datasets</span>}
+              </Link>
+            </li>
+
+            {/* Compare Link */}
+            <li>
               <Link
                 to="/compare"
                 className="flex items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] text-zinc-400 transition-colors hover:bg-white/5 hover:text-white [&.active]:bg-white/10 [&.active]:text-white"

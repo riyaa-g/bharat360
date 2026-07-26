@@ -644,7 +644,7 @@ function TopBar({
             <input
               value={query}
               onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder={`Search ${domain.name.toLowerCase()} datasets…`}
+              placeholder="Search datasets..."
               className="w-56 bg-transparent outline-none placeholder:text-muted-foreground/70 text-foreground"
             />
             {query ? (
