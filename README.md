@@ -20,16 +20,16 @@ Every dashboard focuses on making information accessible by combining visual ana
 
 ## Key Features
 
-- Interactive dashboards with responsive visualizations
-- AI-powered summaries and data-driven insights
-- Historical trend analysis across multiple years
-- Country comparison with animated rankings
-- Curated datasets and source references for every indicator
-- Contextual tooltips explaining metrics, rankings, and statistical terms
-- Dynamic filtering by year, indicator, and comparison country
-- Interactive maps and regional visualizations
-- Report export functionality
-- Dark and Light mode
+• Interactive domain dashboards with responsive visualizations
+• Global dataset search and centralized dataset repository
+• AI-assisted insights and editorial data storytelling
+• Historical trend analysis and country comparison
+• Interactive world map for global benchmarking
+• Interactive state map (demonstration with mock state-level data)
+• Context-aware tooltips and metric explanations
+• Dataset downloads with source attribution
+• Dashboard export as PDF
+• Responsive design with Dark & Light mode
 
 ---
 
@@ -46,7 +46,8 @@ Each section answers questions such as:
 - What practices contribute to their success?
 - Which datasets support these findings?
 - Where can users explore the original data?
-
+- Where does the data come from?
+  
 This approach transforms dashboards from analytical tools into educational experiences.
 
 ---
@@ -65,6 +66,9 @@ This approach transforms dashboards from analytical tools into educational exper
 
 **Data Processing**
 
+- Python
+- Pandas
+- OpenPyXL
 - JSON
 - CSV
 - Excel
@@ -84,13 +88,15 @@ This approach transforms dashboards from analytical tools into educational exper
 
 ## Future Enhancements
 
-- Live API integration
-- Predictive analytics
-- AI conversational data assistant
-- Personalized dashboards
-- Additional regional datasets
-- Custom report generation
-- Real-time news integration
+• Automated dataset updates from trusted public sources
+• Expanded dataset repository covering additional domains and indicators
+• AI chatbot for answering questions using Bharat360 datasets
+• Personalized watchlists and saved indicators through user accounts
+• AI-generated annual report cards and policy summaries
+• Predictive analytics and trend forecasting
+• Real-time news integration linked with dashboard metrics
+• Advanced filtering across year, indicator, source and geography
+• State-level datasets across every supported domain
 
 ---
 
