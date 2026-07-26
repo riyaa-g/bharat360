@@ -14,7 +14,7 @@ export function Footer() {
           <span className="ml-2">India, measured through data.</span>
         </div>
         <div className="flex items-center gap-6">
-          <a href="#" className="hover:text-foreground">Methodology</a>
+          <Link to="/methodology" className="hover:text-foreground">Methodology</Link>
           <Link to="/datasets" className="hover:text-foreground">Data sources</Link>
           <a href="#" className="hover:text-foreground">Privacy</a>
           <span>© {new Date().getFullYear()}</span>

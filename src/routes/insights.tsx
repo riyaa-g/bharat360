@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import indiaHero from "@/assets/india-hero.png";
-import { ArrowUpRight, Clock, ExternalLink, Activity } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ArrowUpRight, Clock, ExternalLink, Activity, ArrowLeft } from "lucide-react";
 import { excelling, attention } from "@/lib/mockInsights";
 
 // Combine the two arrays to simulate "Latest Updates"
@@ -57,6 +58,14 @@ function InsightsPage() {
     <div className="relative min-h-screen bg-gradient-to-br from-orange-50/25 via-blue-50/10 via-white/80 to-green-50/20 dark:from-orange-950/10 dark:via-blue-950/5 dark:via-zinc-900/50 dark:to-green-950/10 selection:bg-saffron/20">
       <Navbar />
       
+      {/* Back Link */}
+      <div className="mx-auto w-full max-w-[1400px] px-6 pt-10 lg:px-10">
+        <Link to="/" className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-foreground dark:text-white hover:opacity-80 transition-opacity w-fit">
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to home
+        </Link>
+      </div>
+
       {/* Hero Section */}
       <section className="relative w-full pt-32 pb-20 px-6 lg:px-10 border-b border-zinc-200/50 dark:border-zinc-800/80 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-blue-500/5 to-transparent pointer-events-none" />

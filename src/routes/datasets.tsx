@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState, useEffect, useMemo } from 'react'
 import { Navbar } from '@/components/site/Navbar'
 import { Footer } from '@/components/site/Footer'
-import { Search, Database, ArrowUpRight, Filter, ChevronDown } from 'lucide-react'
+import { Search, Database, ArrowUpRight, Filter, ChevronDown, ArrowLeft } from 'lucide-react'
 
 export const Route = createFileRoute('/datasets')({
   component: DatasetsExplorer,
@@ -77,7 +77,13 @@ function DatasetsExplorer() {
         <Navbar />
         
         <main className="flex-1 w-full max-w-[1400px] mx-auto px-6 py-12 lg:px-10">
-          
+          <div className="mb-6">
+            <Link to="/" className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-foreground dark:text-white hover:opacity-80 transition-opacity w-fit">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back to home
+            </Link>
+          </div>
+
           <div className="mb-10">
             <h1 className="text-4xl font-bold tracking-tight mb-4 flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-2xl bg-saffron/10 text-saffron">

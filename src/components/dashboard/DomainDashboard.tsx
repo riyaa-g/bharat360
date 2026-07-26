@@ -39,7 +39,11 @@ import {
   ChevronDown,
   X,
   type LucideIcon,
+  TrendingUp,
+  ArrowLeft,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Footer } from "@/components/site/Footer";
 import { Link } from "@tanstack/react-router";
 import type { Domain, DomainSlug } from "@/lib/domains";
 import { DOMAIN_LIST } from "@/lib/domains";
@@ -632,9 +636,9 @@ function TopBar({
             >
               <span className="h-2.5 w-2.5 rounded-full bg-background" />
             </span>
-            <span className="text-[15px] font-bold tracking-tight">Bharat360</span>
+            <span className="hidden sm:inline text-[15px] font-bold tracking-tight">Bharat360</span>
           </Link>
-          <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
+          <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 hidden sm:block" />
           <span className="chip bg-secondary/80 text-muted-foreground font-semibold border-none text-[10.5px] py-0.5 px-2 capitalize">{domain.name}</span>
         </div>
 
@@ -720,7 +724,7 @@ function TopBar({
 
           <button 
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background hover:opacity-90 cursor-pointer transition shadow-sm"
+            className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background hover:opacity-90 cursor-pointer transition shadow-sm whitespace-nowrap"
           >
             <Download className="h-3.5 w-3.5" /> Export Report
           </button>
@@ -1608,8 +1612,17 @@ export function DomainDashboard({ domain }: { domain: Domain }) {
         }
       `}} />
       <TopBar domain={activeDomainData} fy={fy} onFy={setFy} />
-      <main className="mx-auto w-full max-w-[1400px] space-y-6 px-6 py-8">
-        <header className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:flex-wrap sm:justify-between border-b border-zinc-200/40 dark:border-zinc-800/40 pb-5">
+      <main className="mx-auto w-full max-w-[1400px] pb-10">
+        
+        {/* Back Link */}
+        <div className="px-6 pt-6 no-print">
+          <Link to="/" hash="domains" className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-foreground dark:text-white hover:opacity-80 transition-opacity w-fit">
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to all domains
+          </Link>
+        </div>
+
+        <header className="px-6 mt-6 lg:mt-8 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:flex-wrap sm:justify-between border-b border-zinc-200/40 dark:border-zinc-800/40 pb-5">
           <div className="min-w-0">
             <div className="chip bg-saffron-soft/20 text-saffron border border-saffron-soft/50 no-print">{fy}</div>
             <h1 className="mt-3 font-sans font-bold text-4xl tracking-tight sm:text-5xl text-foreground">
@@ -1681,8 +1694,8 @@ export function DomainDashboard({ domain }: { domain: Domain }) {
         <ExploreSection domain={activeDomainData} />
         <SourcesSection domain={activeDomainData} />
 
-        <div className="pt-4 pb-8 text-center text-[11px] text-muted-foreground border-t border-zinc-250/20 dark:border-zinc-800/20 no-print">
-          Bharat360 · Data updated {domain.sources[0]?.updated ?? "recently"} · Made with care
+        <div className="no-print mt-12 border-t hairline">
+          <Footer />
         </div>
       </main>
     </>

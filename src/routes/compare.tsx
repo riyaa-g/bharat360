@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   ResponsiveContainer,
@@ -17,9 +17,10 @@ import {
   Plus,
   Trophy,
   Sparkles,
-  Info,
   Globe2,
   ArrowRight,
+  ArrowLeft,
+  Info,
 } from "lucide-react";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
@@ -361,6 +362,14 @@ function ComparePage() {
       <Navbar />
 
       <main className="mx-auto w-full max-w-[1400px] px-6 py-10 lg:px-10 relative">
+        {/* Back Link */}
+        <div className="mb-6">
+          <Link to="/" className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-foreground dark:text-white hover:opacity-80 transition-opacity w-fit">
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to home
+          </Link>
+        </div>
+
         {/* Hero Header Area (No card borders around header, actual world map image as BG with blue/green gradient) */}
         <header className="relative rounded-3xl overflow-hidden mb-8 p-8 sm:p-10 bg-gradient-to-br from-blue-500/10 via-teal-500/5 to-emerald-500/10 dark:from-blue-950/20 dark:via-teal-950/10 dark:to-emerald-950/15 border border-zinc-200/40 dark:border-zinc-800/40">
           {/* World map image background with green/blue gradient styling */}

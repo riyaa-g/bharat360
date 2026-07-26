@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as DatasetsRouteImport } from './routes/datasets'
 import { Route as InsightsRouteImport } from './routes/insights'
+import { Route as MethodologyRouteImport } from './routes/methodology'
 import { Route as DashboardDomainRouteImport } from './routes/dashboard.$domain'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const InsightsRoute = InsightsRouteImport.update({
   path: '/insights',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MethodologyRoute = MethodologyRouteImport.update({
+  id: '/methodology',
+  path: '/methodology',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardDomainRoute = DashboardDomainRouteImport.update({
   id: '/dashboard/$domain',
   path: '/dashboard/$domain',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/compare': typeof CompareRoute
   '/datasets': typeof DatasetsRoute
   '/insights': typeof InsightsRoute
+  '/methodology': typeof MethodologyRoute
   '/dashboard/$domain': typeof DashboardDomainRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/compare': typeof CompareRoute
   '/datasets': typeof DatasetsRoute
   '/insights': typeof InsightsRoute
+  '/methodology': typeof MethodologyRoute
   '/dashboard/$domain': typeof DashboardDomainRoute
 }
 export interface FileRoutesById {
@@ -61,19 +69,33 @@ export interface FileRoutesById {
   '/compare': typeof CompareRoute
   '/datasets': typeof DatasetsRoute
   '/insights': typeof InsightsRoute
+  '/methodology': typeof MethodologyRoute
   '/dashboard/$domain': typeof DashboardDomainRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/compare' | '/datasets' | '/insights' | '/dashboard/$domain'
+  fullPaths:
+    | '/'
+    | '/compare'
+    | '/datasets'
+    | '/insights'
+    | '/methodology'
+    | '/dashboard/$domain'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/compare' | '/datasets' | '/insights' | '/dashboard/$domain'
+  to:
+    | '/'
+    | '/compare'
+    | '/datasets'
+    | '/insights'
+    | '/methodology'
+    | '/dashboard/$domain'
   id:
     | '__root__'
     | '/'
     | '/compare'
     | '/datasets'
     | '/insights'
+    | '/methodology'
     | '/dashboard/$domain'
   fileRoutesById: FileRoutesById
 }
@@ -82,6 +104,7 @@ export interface RootRouteChildren {
   CompareRoute: typeof CompareRoute
   DatasetsRoute: typeof DatasetsRoute
   InsightsRoute: typeof InsightsRoute
+  MethodologyRoute: typeof MethodologyRoute
   DashboardDomainRoute: typeof DashboardDomainRoute
 }
 
@@ -115,6 +138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/methodology': {
+      id: '/methodology'
+      path: '/methodology'
+      fullPath: '/methodology'
+      preLoaderRoute: typeof MethodologyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/$domain': {
       id: '/dashboard/$domain'
       path: '/dashboard/$domain'
@@ -130,6 +160,7 @@ const rootRouteChildren: RootRouteChildren = {
   CompareRoute: CompareRoute,
   DatasetsRoute: DatasetsRoute,
   InsightsRoute: InsightsRoute,
+  MethodologyRoute: MethodologyRoute,
   DashboardDomainRoute: DashboardDomainRoute,
 }
 export const routeTree = rootRouteImport
