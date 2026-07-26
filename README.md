@@ -63,6 +63,8 @@ This approach transforms dashboards from analytical tools into educational exper
 - Tailwind CSS
 - shadcn/ui
 - Recharts
+- D3 Geo
+- TopoJSON Client
 
 **Data Processing**
 
