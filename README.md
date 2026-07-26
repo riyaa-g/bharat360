@@ -88,15 +88,15 @@ This approach transforms dashboards from analytical tools into educational exper
 
 ## Future Enhancements
 
-• Automated dataset updates from trusted public sources
-• Expanded dataset repository covering additional domains and indicators
-• AI chatbot for answering questions using Bharat360 datasets
-• Personalized watchlists and saved indicators through user accounts
-• AI-generated annual report cards and policy summaries
-• Predictive analytics and trend forecasting
-• Real-time news integration linked with dashboard metrics
-• Advanced filtering across year, indicator, source and geography
-• State-level datasets across every supported domain
+- Automated dataset updates from trusted public sources
+- Expanded dataset repository covering additional domains and indicators
+- AI chatbot for answering questions using Bharat360 datasets
+- Personalized watchlists and saved indicators through user accounts
+- AI-generated annual report cards and policy summaries
+- Predictive analytics and trend forecasting
+- Real-time news integration linked with dashboard metrics
+- Advanced filtering across year, indicator, source and geography
+- State-level datasets across every supported domain
 
 ---
 
