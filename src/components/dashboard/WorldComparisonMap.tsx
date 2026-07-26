@@ -1,12 +1,11 @@
 import { useMemo, useState, useEffect, useRef } from "react";
-import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
+import { geoMercator, geoPath } from "d3-geo";
+import * as topojson from "topojson-client";
 import { scaleLinear } from "d3-scale";
 import { Info, X, Globe2, ZoomIn, ZoomOut, RotateCcw, MapPin } from "lucide-react";
 
-// TopoJSON map of the world
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
-// The indicators we support
 const INDICATORS = [
   { id: "gdp", label: "GDP Growth (%)", desc: "Annual percentage growth rate of GDP", source: "World Bank" },
   { id: "hdi", label: "Human Development Index", desc: "Composite index of life expectancy, education, and per capita income", source: "UNDP" },
@@ -17,7 +16,6 @@ const INDICATORS = [
 
 type IndicatorId = typeof INDICATORS[number]["id"];
 
-// Our Mock Data for ~30 major economies
 const MOCK_MAP_DATA: Record<string, { code: string; gdp: number; hdi: number; innovation: number; epi: number; life: number; summary: string }> = {
   "India": { code: "IN", gdp: 7.2, hdi: 0.633, innovation: 40, epi: 18.9, life: 67.2, summary: "Fastest-growing major economy with massive digital infrastructure expansion." },
   "United States of America": { code: "US", gdp: 2.1, hdi: 0.921, innovation: 2, epi: 51.1, life: 77.2, summary: "World's largest economy with leading innovation and capital markets." },
@@ -55,23 +53,56 @@ interface WorldComparisonMapProps {
 }
 
 export function WorldComparisonMap({ onCompare }: WorldComparisonMapProps) {
+  const [geographies, setGeographies] = useState<any[]>([]);
   const [indicator, setIndicator] = useState<IndicatorId>("gdp");
   const [tooltipContent, setTooltipContent] = useState<any>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [selectedCountry, setSelectedCountry] = useState<any>(null);
-
-  // Map interaction state
   const [isMapInteractive, setIsMapInteractive] = useState(false);
-  const [position, setPosition] = useState({ coordinates: [0, 20] as [number, number], zoom: 1 });
-  const mapContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Transform state for pan and zoom
+  const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0, initX: 0, initY: 0 });
 
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  // Load map topology
   useEffect(() => {
-    // Initial animation to center on India
+    fetch(geoUrl)
+      .then((res) => res.json())
+      .then((topology) => {
+        // @ts-ignore
+        const features = topojson.feature(topology, topology.objects.countries).features;
+        setGeographies(features);
+      })
+      .catch(console.error);
+  }, []);
+
+  // Map projection config (baseline)
+  const projection = useMemo(() => geoMercator().scale(130).translate([400, 300]), []);
+  const pathGenerator = useMemo(() => geoPath().projection(projection), [projection]);
+
+  const indiaCenter = useMemo(() => {
+    const coords = projection([79.0, 22.0]);
+    return coords || [579.25, 248.81];
+  }, [projection]);
+
+  const getTransformToCenter = (k: number) => {
+    // Exact centering math for CSS transform origin at [400, 300]
+    const x = -(indiaCenter[0] - 400) * k;
+    const y = -(indiaCenter[1] - 300) * k;
+    return { x, y, k };
+  };
+
+  // Initial animation
+  useEffect(() => {
     const timer = setTimeout(() => {
-      setPosition({ coordinates: [80, 22], zoom: 2 });
+      setTransform(getTransformToCenter(2.5));
     }, 600);
     return () => clearTimeout(timer);
-  }, []);
+  }, [indiaCenter]);
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -92,66 +123,82 @@ export function WorldComparisonMap({ onCompare }: WorldComparisonMapProps) {
     };
   }, [isMapInteractive]);
 
-  // Completely freeze wheel/touch events from reaching d3-zoom when inactive
-  // This guarantees normal page scrolling works without the map interfering.
+  // Handle native wheel event to zoom (only when interactive)
   useEffect(() => {
     const el = mapContainerRef.current;
     if (!el) return;
 
-    const stopIfInactive = (e: Event) => {
-      if (!isMapInteractive) {
-        e.stopPropagation();
-      }
+    const handleWheel = (e: WheelEvent) => {
+      if (!isMapInteractive) return;
+      
+      e.preventDefault(); // Prevent page scroll when interacting
+      
+      setTransform((prev) => {
+        const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
+        let newK = prev.k * zoomDelta;
+        newK = Math.max(1, Math.min(newK, 8)); // clamp zoom between 1 and 8
+        
+        // Simple zoom around center (to do zoom-to-mouse requires calculating offset, 
+        // for this implementation center-zoom is smooth and robust).
+        return { ...prev, k: newK };
+      });
     };
 
-    const handleDoubleClick = (e: MouseEvent) => {
-      if (!isMapInteractive) {
-        setIsMapInteractive(true);
-        e.stopPropagation();
-      }
-    };
-
-    el.addEventListener("wheel", stopIfInactive, { capture: true });
-    el.addEventListener("touchstart", stopIfInactive, { capture: true });
-    el.addEventListener("touchmove", stopIfInactive, { capture: true });
-    el.addEventListener("dblclick", handleDoubleClick, { capture: true });
-
-    return () => {
-      el.removeEventListener("wheel", stopIfInactive, { capture: true });
-      el.removeEventListener("touchstart", stopIfInactive, { capture: true });
-      el.removeEventListener("touchmove", stopIfInactive, { capture: true });
-      el.removeEventListener("dblclick", handleDoubleClick, { capture: true });
-    };
+    // Use passive: false to allow preventDefault
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
   }, [isMapInteractive]);
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isMapInteractive) return;
+    setIsDragging(true);
+    dragStartPos.current = {
+      x: e.clientX,
+      y: e.clientY,
+      initX: transform.x,
+      initY: transform.y
+    };
+  };
+
+  const handleMouseMoveMap = (e: React.MouseEvent) => {
+    if (!isMapInteractive || !isDragging) return;
+    const dx = e.clientX - dragStartPos.current.x;
+    const dy = e.clientY - dragStartPos.current.y;
+    setTransform(prev => ({
+      ...prev,
+      x: dragStartPos.current.initX + dx,
+      y: dragStartPos.current.initY + dy
+    }));
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
   const handleZoomIn = () => {
-    if (position.zoom >= 5) return;
-    setPosition((pos) => ({ ...pos, zoom: pos.zoom * 1.5 }));
+    setTransform(prev => ({ ...prev, k: Math.min(prev.k * 1.5, 8) }));
   };
 
   const handleZoomOut = () => {
-    if (position.zoom <= 1) return;
-    setPosition((pos) => ({ ...pos, zoom: pos.zoom / 1.5 }));
+    setTransform(prev => ({ ...prev, k: Math.max(prev.k / 1.5, 1) }));
   };
 
   const handleReset = () => {
-    setPosition({ coordinates: [80, 22], zoom: 2 });
+    setTransform(getTransformToCenter(2.5));
   };
 
   const handleCenterIndia = () => {
-    setPosition({ coordinates: [80, 22], zoom: 4 });
+    setTransform(getTransformToCenter(4));
   };
 
   const currentIndicator = INDICATORS.find((i) => i.id === indicator)!;
 
-  // Compute ranks for the active indicator
   const rankedCountries = useMemo(() => {
     const list = Object.entries(MOCK_MAP_DATA).map(([name, data]) => ({
       name,
       ...data,
       val: data[indicator as keyof typeof data] as number,
     }));
-    // Determine sort direction (innovation rank lower is better, others higher is better)
     if (indicator === "innovation") {
       list.sort((a, b) => a.val - b.val);
     } else {
@@ -160,28 +207,23 @@ export function WorldComparisonMap({ onCompare }: WorldComparisonMapProps) {
     return list.map((item, idx) => ({ ...item, rank: idx + 1 }));
   }, [indicator]);
 
-  // Color Scale Generator
   const colorScale = useMemo(() => {
     const vals = rankedCountries.map((c) => c.val);
+    if (vals.length === 0) return scaleLinear<string>().domain([0, 1]).range(["#e4e4e7", "#e4e4e7"]);
     const min = Math.min(...vals);
     const max = Math.max(...vals);
 
     if (indicator === "innovation") {
-      // Lower is better (darker green for lower rank)
       return scaleLinear<number, string>().domain([min, max]).range(["#10b981", "#fbbf24"]);
     } else if (indicator === "gdp") {
-      // Negative is red, positive is green
       return scaleLinear<number, string>().domain([min, 0, max]).range(["#ef4444", "#fef3c7", "#10b981"]);
     } else {
-      // Higher is better
       return scaleLinear<number, string>().domain([min, max]).range(["#fef3c7", "#10b981"]);
     }
   }, [indicator, rankedCountries]);
 
-  const handleMouseEnter = (geo: any, evt: React.MouseEvent) => {
-    const countryName = geo.properties.name;
+  const handleMouseEnter = (countryName: string, evt: React.MouseEvent) => {
     const data = rankedCountries.find((c) => c.name === countryName);
-    
     if (data) {
       setTooltipContent({
         name: countryName,
@@ -195,20 +237,14 @@ export function WorldComparisonMap({ onCompare }: WorldComparisonMapProps) {
     }
   };
 
-  const handleMouseMove = (evt: React.MouseEvent) => {
+  const handleHoverMove = (evt: React.MouseEvent) => {
     if (tooltipContent) {
       setTooltipPos({ x: evt.clientX, y: evt.clientY });
     }
   };
 
-  const handleMouseLeave = () => {
-    setTooltipContent(null);
-  };
-
-  const handleClick = (geo: any) => {
-    const countryName = geo.properties.name;
+  const handleCountryClick = (countryName: string) => {
     const data = rankedCountries.find((c) => c.name === countryName);
-    
     if (data && data.code !== "IN") {
       setSelectedCountry(data);
     }
@@ -218,13 +254,12 @@ export function WorldComparisonMap({ onCompare }: WorldComparisonMapProps) {
     <section className="relative w-full mx-auto mb-12 animate-fade-in">
       <div className="card-surface rounded-3xl overflow-hidden border border-zinc-200/50 dark:border-zinc-800/60 shadow-sm relative flex flex-col xl:flex-row">
         
-        {/* Main Map Area */}
         <div 
           ref={mapContainerRef}
           className="flex-1 relative min-h-[500px] bg-gradient-to-br from-sky-50/50 to-transparent dark:from-sky-950/10 dark:to-transparent"
+          onDoubleClick={() => !isMapInteractive && setIsMapInteractive(true)}
         >
           
-          {/* Header & Controls Overlay */}
           <div className="absolute top-0 left-0 right-0 p-5 z-20 flex flex-col sm:flex-row gap-4 justify-between items-start pointer-events-none">
             <div className="pointer-events-auto">
               <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
@@ -252,76 +287,67 @@ export function WorldComparisonMap({ onCompare }: WorldComparisonMapProps) {
             </div>
           </div>
 
-          {/* Map Render */}
-          <ComposableMap 
-            projection="geoMercator" 
-            projectionConfig={{ scale: 120 }}
-            className={`w-full h-[500px] xl:h-[600px] outline-none transition-opacity ${!isMapInteractive ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"}`}
+          <div 
+            className={`w-full h-[500px] xl:h-[600px] overflow-hidden ${!isMapInteractive ? "cursor-pointer" : (isDragging ? "cursor-grabbing" : "cursor-grab")}`}
+            onMouseDown={handleMouseDown}
+            onMouseMove={(e) => {
+              handleMouseMoveMap(e);
+              handleHoverMove(e);
+            }}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={() => {
+              handleMouseUp();
+              setTooltipContent(null);
+            }}
           >
-            <ZoomableGroup 
-              center={position.coordinates} 
-              zoom={position.zoom} 
-              onMoveEnd={(pos) => setPosition({ coordinates: pos.coordinates as [number, number], zoom: pos.zoom })}
-              disablePanning={!isMapInteractive}
-              disableZooming={!isMapInteractive}
+            <svg 
+              ref={svgRef}
+              viewBox="0 0 800 600" 
+              className="w-full h-full outline-none block pointer-events-none"
+              preserveAspectRatio="xMidYMid slice"
             >
-              <Geographies geography={geoUrl}>
-                {({ geographies }) =>
-                  geographies.map((geo) => {
-                    const countryName = geo.properties.name;
-                    const isIndia = countryName === "India";
-                    const data = rankedCountries.find((c) => c.name === countryName);
-                    
-                    let fillColor = "#e4e4e7"; // zinc-200 default
-                    if (document.documentElement.classList.contains("dark")) {
-                      fillColor = "#27272a"; // zinc-800 default dark
-                    }
-                    
-                    if (data) {
-                      fillColor = colorScale(data.val) as string;
-                    }
+              <g 
+                style={{
+                  transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.k})`,
+                  transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)',
+                  transformOrigin: '400px 300px'
+                }}
+              >
+                {geographies.map((geo, idx) => {
+                  const countryName = geo.properties?.name || "";
+                  const isIndia = countryName === "India";
+                  const data = rankedCountries.find((c) => c.name === countryName);
+                  
+                  let fillColor = "currentColor";
+                  let className = "text-zinc-200 dark:text-zinc-800";
+                  
+                  if (data) {
+                    fillColor = colorScale(data.val) as string;
+                    className = "";
+                  }
 
-                    return (
-                      <Geography
-                        key={geo.rsmKey}
-                        geography={geo}
-                        onMouseEnter={(e) => handleMouseEnter(geo, e)}
-                        onMouseMove={handleMouseMove}
-                        onMouseLeave={handleMouseLeave}
-                        onClick={() => handleClick(geo)}
-                        className="outline-none"
-                        style={{
-                          default: {
-                            fill: fillColor,
-                            stroke: isIndia ? "var(--saffron)" : "#ffffff40",
-                            strokeWidth: isIndia ? 2 : 0.5,
-                            outline: "none",
-                            transition: "all 250ms",
-                          },
-                          hover: {
-                            fill: data ? (isIndia ? "var(--saffron)" : "#f59e0b") : "#a1a1aa",
-                            stroke: "#fff",
-                            strokeWidth: 1,
-                            outline: "none",
-                            cursor: data ? "pointer" : "default"
-                          },
-                          pressed: {
-                            fill: data ? "#d97706" : "#a1a1aa",
-                            outline: "none",
-                          },
-                        }}
-                      />
-                    );
-                  })
-                }
-              </Geographies>
-              {/* India pulse ring marker (approx coordinate for India) */}
-              <g transform="translate(685, 275)">
-                 <circle r="8" fill="var(--saffron)" fillOpacity="0.4" className="animate-ping" />
-                 <circle r="4" fill="var(--saffron)" />
+                  return (
+                    <path
+                      key={idx}
+                      d={pathGenerator(geo) || ""}
+                      fill={fillColor}
+                      stroke={isIndia ? "var(--saffron)" : "rgba(255,255,255,0.4)"}
+                      strokeWidth={isIndia ? 2 / transform.k : 0.5 / transform.k}
+                      className={`outline-none pointer-events-auto transition-colors duration-200 hover:opacity-80 ${className}`}
+                      onMouseEnter={(e) => handleMouseEnter(countryName, e)}
+                      onMouseLeave={() => setTooltipContent(null)}
+                      onClick={() => handleCountryClick(countryName)}
+                    />
+                  );
+                })}
+                {/* India pulse ring marker (exact coordinate for India based on geoMercator) */}
+                <g transform={`translate(${indiaCenter[0]}, ${indiaCenter[1]})`}>
+                   <circle r={8 / transform.k} fill="var(--saffron)" fillOpacity="0.4" className="animate-ping pointer-events-none" />
+                   <circle r={4 / transform.k} fill="var(--saffron)" className="pointer-events-none" />
+                </g>
               </g>
-            </ZoomableGroup>
-          </ComposableMap>
+            </svg>
+          </div>
 
           {/* Interactive State Overlay Badge */}
           {isMapInteractive ? (
