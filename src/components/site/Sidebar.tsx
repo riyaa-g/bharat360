@@ -84,7 +84,7 @@ export function Sidebar({ collapsed, onToggle, activeDomain }: SidebarProps) {
             </li>
 
             {/* Explore Section */}
-            <li className="pt-4">
+            <li className="pt-2">
               {!collapsed ? (
                 <div className="px-2 pb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-zinc-550">
                   Explore

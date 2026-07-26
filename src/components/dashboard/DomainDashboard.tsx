@@ -603,6 +603,17 @@ function TopBar({
     }
   };
 
+  const getSourceUrl = (source: string) => {
+    switch(source.toUpperCase()) {
+      case 'WORLDBANK': return 'https://data.worldbank.org/';
+      case 'OWID': return 'https://ourworldindata.org/';
+      case 'UNDP': return 'https://hdr.undp.org/data-center';
+      case 'WHO': return 'https://www.who.int/data/gho';
+      case 'OXFORD': return 'https://www.bsg.ox.ac.uk/';
+      default: return 'https://www.google.com/search?q=' + encodeURIComponent(source + ' data');
+    }
+  };
+
   const handleSearchChange = (val: string) => {
     setQuery(val);
     if (!val.trim()) {
@@ -659,9 +670,10 @@ function TopBar({
                   <ul className="space-y-0.5 max-h-64 overflow-y-auto">
                     {searchResults.map((r, idx) => (
                       <li key={idx}>
-                        <Link
-                          to="/dashboard/$domain"
-                          params={{ domain: r.category.toLowerCase() }}
+                        <a
+                          href={getSourceUrl(r.source)}
+                          target="_blank"
+                          rel="noreferrer"
                           onClick={() => setQuery("")}
                           className="w-full text-left rounded-lg px-2 py-1.5 hover:bg-secondary/60 text-[12.5px] transition-colors flex flex-col group cursor-pointer"
                         >
@@ -672,7 +684,7 @@ function TopBar({
                           <div className="text-[10px] text-muted-foreground mt-0.5 truncate">
                             {r.source} • {r.category}
                           </div>
-                        </Link>
+                        </a>
                       </li>
                     ))}
                   </ul>
@@ -1425,14 +1437,24 @@ export function DomainDashboard({ domain }: { domain: Domain }) {
         world: Number(t["United States"]) || 0
       }));
 
-      const targetYearStr = (2014 + yearIndex).toString(); 
+      const targetYearStr = (2020 + yearIndex).toString(); 
       const targetYear = dataset.raw.years.includes(parseInt(targetYearStr, 10)) ? targetYearStr : dataset.latestYear;
 
-      cloned.topCountries = dataset.raw.data.map(row => ({
+      const allCountries = dataset.raw.data.map(row => ({
         code: COUNTRY_CODES[row.country] || row.country.substring(0, 2).toUpperCase(),
         name: row.country,
         value: Number(row[targetYear]) || 0
-      })).filter(c => c.value > 0).sort((a, b) => b.value - a.value).slice(0, 6);
+      })).filter(c => c.value > 0).sort((a, b) => b.value - a.value);
+
+      const indiaData = allCountries.find(c => c.name === "India");
+      let topCountriesList = allCountries.slice(0, 5);
+      if (indiaData && !topCountriesList.find(c => c.name === "India")) {
+        topCountriesList.push(indiaData);
+      } else if (allCountries.length > 5 && topCountriesList.find(c => c.name === "India")) {
+        topCountriesList = allCountries.slice(0, 6);
+      }
+      
+      cloned.topCountries = topCountriesList.sort((a, b) => b.value - a.value);
 
       const indiaRow = dataset.raw.data.find(r => r.country === "India");
       

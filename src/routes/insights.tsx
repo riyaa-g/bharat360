@@ -99,13 +99,13 @@ function InsightsPage() {
                   <h2 className="text-xl font-bold tracking-tight">The Data Story</h2>
                 </div>
                 <div 
-                  className="prose prose-zinc dark:prose-invert max-w-none prose-p:text-[17.5px] prose-p:leading-[1.8] prose-p:text-muted-foreground prose-strong:text-foreground prose-strong:font-bold prose-mark:bg-saffron-soft/20 prose-mark:text-foreground prose-mark:rounded prose-mark:px-1 prose-mark:py-0.5"
+                  className="prose prose-zinc dark:prose-invert max-w-none prose-p:text-[17.5px] md:prose-p:text-[18px] prose-p:leading-[1.8] prose-p:text-muted-foreground prose-strong:text-foreground prose-strong:font-bold prose-mark:bg-saffron/40 dark:prose-mark:bg-saffron/80 prose-mark:text-black dark:prose-mark:text-black prose-mark:rounded prose-mark:px-1.5 prose-mark:py-0.5"
                   dangerouslySetInnerHTML={{ __html: data.story }}
                 />
               </article>
 
               <section>
-                <h3 className="text-xl font-bold tracking-tight mb-6">Key Takeaways</h3>
+                <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-6">Key Takeaways</h3>
                 <div className="bg-secondary/30 border border-zinc-200/50 dark:border-zinc-800/80 rounded-[var(--radius-xl)] p-8">
                   <ul className="space-y-4">
                     {data.takeaways.map((point: string, idx: number) => (
@@ -121,8 +121,8 @@ function InsightsPage() {
               </section>
 
               <section>
-                <h3 className="text-xl font-bold tracking-tight mb-4">Looking Ahead</h3>
-                <p className="text-[16.5px] leading-[1.8] text-muted-foreground p-6 border-l-2 border-saffron bg-saffron-soft/10">
+                <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mb-4">Looking Ahead</h3>
+                <p className="text-[16.5px] leading-[1.8] text-muted-foreground p-6 border-l-2 border-saffron bg-saffron-soft/10 dark:bg-saffron-soft/5">
                   {data.ahead}
                 </p>
               </section>
@@ -144,9 +144,9 @@ function InsightsPage() {
             </div>
 
             {/* Sidebar Column: Latest Updates */}
-            <aside className="lg:col-span-4">
+            <aside className="lg:col-span-4 mt-8 lg:mt-0">
               <div className="sticky top-24">
-                <h2 className="text-lg font-bold tracking-tight mb-8 flex items-center gap-2">
+                <h2 className="text-lg md:text-xl font-bold tracking-tight text-foreground mb-8 flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" /> Latest Updates
                 </h2>
                 

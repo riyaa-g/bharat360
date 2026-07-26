@@ -131,7 +131,7 @@ function Home() {
 function Hero({ overview }: { overview: any }) {
   return (
     <section className="relative overflow-hidden">
-      <div className="relative mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-10 px-6 pt-16 pb-24 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-10 lg:pt-24 lg:pb-32">
+      <div className="relative mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-10 px-6 pt-8 pb-24 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-10 lg:pt-12 lg:pb-32">
         {/* Left */}
         <div className="min-w-0">
           <span className="chip">
@@ -645,23 +645,20 @@ function Snapshot() {
 
         {/* Row 1: India Excelling */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="grid h-6 w-6 place-items-center rounded-lg bg-green/10 text-green dark:bg-green-950/20">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-              </span>
-              <h3 className="text-[14px] font-bold uppercase tracking-wider text-green-soft" style={{ color: "oklch(0.55 0.13 155)" }}>
-                India Excelling
-              </h3>
-            </div>
-            <Link to="/insights" className="text-[13px] font-medium text-muted-foreground hover:text-foreground">View all →</Link>
+          <div className="flex items-center gap-2">
+            <span className="grid h-6 w-6 place-items-center rounded-lg bg-green/10 text-green dark:bg-green-950/20">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+            </span>
+            <h3 className="text-[14px] font-bold uppercase tracking-wider text-green-soft" style={{ color: "oklch(0.55 0.13 155)" }}>
+              India Excelling
+            </h3>
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {topExcelling.map((it) => (
               <div
                 key={it.title}
-                className="relative flex flex-col justify-between rounded-2xl border border-zinc-200/50 dark:border-zinc-800/80 bg-gradient-to-br from-green-50/10 via-card to-emerald-50/5 p-6"
+                className="relative flex flex-col justify-between rounded-2xl border border-green-200/50 dark:border-green-900/30 bg-gradient-to-br from-green-500/10 to-emerald-500/5 dark:from-green-500/15 dark:to-emerald-500/5 p-6"
               >
                 <div>
                   <h4 className="text-[16px] font-bold tracking-tight text-foreground">
@@ -681,23 +678,20 @@ function Snapshot() {
 
         {/* Row 2: Needs Attention (with RED color to draw attention!) */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="grid h-6 w-6 place-items-center rounded-lg bg-red-500/10 text-red-500 dark:bg-red-950/20">
-                <AlertTriangle className="h-3.5 w-3.5" />
-              </span>
-              <h3 className="text-[14px] font-bold uppercase tracking-wider text-red-500">
-                Needs Attention &amp; Focus
-              </h3>
-            </div>
-            <Link to="/insights" className="text-[13px] font-medium text-muted-foreground hover:text-foreground">View all →</Link>
+          <div className="flex items-center gap-2">
+            <span className="grid h-6 w-6 place-items-center rounded-lg bg-red-500/10 text-red-500 dark:bg-red-950/20">
+              <AlertTriangle className="h-3.5 w-3.5" />
+            </span>
+            <h3 className="text-[14px] font-bold uppercase tracking-wider text-red-500">
+              Needs Attention &amp; Focus
+            </h3>
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {topAttention.map((it) => (
               <div
                 key={it.title}
-                className="relative flex flex-col justify-between rounded-2xl border border-red-150/60 dark:border-red-950/25 bg-gradient-to-br from-red-50/15 via-card to-rose-50/5 dark:from-red-950/10 dark:to-zinc-900/10 p-6"
+                className="relative flex flex-col justify-between rounded-2xl border border-red-200/50 dark:border-red-900/30 bg-gradient-to-br from-red-500/10 to-rose-500/5 dark:from-red-500/15 dark:to-rose-500/5 p-6"
               >
                 <div>
                   <h4 className="text-[16px] font-bold tracking-tight text-foreground">
