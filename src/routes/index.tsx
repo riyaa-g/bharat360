@@ -23,6 +23,7 @@ import {
   CloudRain,
   IndianRupee,
   ArrowUp,
+  Info,
 } from "lucide-react";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
@@ -432,10 +433,10 @@ function AtAGlance() {
 
         <div className="grid grid-cols-12 gap-4 lg:gap-5">
           {/* KPI row */}
-          <Kpi label="GDP (Nominal)" value="$3.7T" delta="+7.8%" positive gradient="bg-gradient-to-br from-orange-100/90 via-card to-amber-100/30 dark:from-orange-950/40 dark:via-zinc-900 dark:to-amber-950/15 border-orange-200/80 dark:border-orange-900/40" />
+          <Kpi label="GDP (Nominal)" value="$3.7T" delta="+7.8%" positive gradient="bg-gradient-to-br from-orange-100/90 via-card to-amber-100/30 dark:from-orange-950/40 dark:via-zinc-900 dark:to-amber-950/15 border-orange-200/80 dark:border-orange-900/40" tooltip={{ full: "Gross Domestic Product", desc: "Total market value of all finished goods and services produced." }} />
           <Kpi label="Population" value="1.43B" delta="+0.8%" positive gradient="bg-gradient-to-br from-blue-100/90 via-card to-indigo-100/30 dark:from-blue-950/40 dark:via-zinc-900 dark:to-indigo-950/15 border-blue-200/80 dark:border-blue-900/40" />
-          <Kpi label="Per Capita Income" value="$2,663" delta="+6.1%" positive gradient="bg-gradient-to-br from-green-100/90 via-card to-emerald-100/30 dark:from-green-950/40 dark:via-zinc-900 dark:to-emerald-950/15 border-green-200/80 dark:border-green-900/40" />
-          <Kpi label="HDI Rank" value="132" delta="↑ 5" positive gradient="bg-gradient-to-br from-purple-100/90 via-card to-violet-100/30 dark:from-purple-950/40 dark:via-zinc-900 dark:to-violet-950/15 border-purple-200/80 dark:border-purple-900/40" />
+          <Kpi label="Per Capita Income" value="$2,663" delta="+6.1%" positive gradient="bg-gradient-to-br from-green-100/90 via-card to-emerald-100/30 dark:from-green-950/40 dark:via-zinc-900 dark:to-emerald-950/15 border-green-200/80 dark:border-green-900/40" tooltip={{ full: "Income per Person", desc: "Average income earned per person in a given area in a specified year." }} />
+          <Kpi label="HDI Rank" value="132" delta="↑ 5" positive gradient="bg-gradient-to-br from-purple-100/90 via-card to-violet-100/30 dark:from-purple-950/40 dark:via-zinc-900 dark:to-violet-950/15 border-purple-200/80 dark:border-purple-900/40" tooltip={{ full: "Human Development Index", desc: "A statistic composite index of life expectancy, education, and per capita income." }} />
 
           {/* Global Position — dark hero tile */}
           <div className="col-span-12 md:col-span-6 lg:col-span-4 rounded-[var(--radius-2xl)] p-7 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black border border-zinc-800/80 text-white relative overflow-hidden">
@@ -462,7 +463,7 @@ function AtAGlance() {
                 <h3 className="text-lg font-medium tracking-tight">Category distribution</h3>
                 <p className="text-[12.5px] text-muted-foreground">Performance by pillar (out of 100)</p>
               </div>
-              <a href="#" className="text-[12.5px] text-muted-foreground hover:text-foreground">View all →</a>
+              <a href="#domains" className="text-[12.5px] text-muted-foreground hover:text-foreground">View all →</a>
             </div>
 
             <ul className="mt-6 space-y-3.5">
@@ -569,17 +570,33 @@ function Kpi({
   delta,
   positive,
   gradient,
+  tooltip,
 }: {
   label: string;
   value: string;
   delta: string;
   positive: boolean;
   gradient?: string;
+  tooltip?: { full: string; desc: string };
 }) {
   const cardBg = gradient || "card-surface";
   return (
-    <div className={`col-span-6 md:col-span-3 p-5 rounded-[var(--radius-2xl)] border transition hover:shadow-md ${cardBg}`}>
-      <p className="text-[11.5px] uppercase tracking-wider text-muted-foreground">{label}</p>
+    <div className={`col-span-6 md:col-span-3 p-5 rounded-[var(--radius-2xl)] border transition hover:shadow-md relative group ${cardBg}`}>
+      <div className="flex items-center gap-1.5">
+        <p className="text-[11.5px] uppercase tracking-wider text-muted-foreground">{label}</p>
+        {tooltip && (
+          <div className="group/tooltip relative flex items-center justify-center">
+            <Info className="h-3.5 w-3.5 text-muted-foreground/70 cursor-help hover:text-foreground transition-colors" />
+            <div className="absolute bottom-full left-1/2 mb-2 w-48 -translate-x-1/2 opacity-0 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:pointer-events-auto transition-opacity z-50">
+              <div className="rounded-lg bg-zinc-900 dark:bg-zinc-100 p-2 text-left text-[11px] text-zinc-100 dark:text-zinc-900 shadow-xl">
+                <div className="font-bold mb-0.5">{tooltip.full}</div>
+                <div className="opacity-90 leading-tight">{tooltip.desc}</div>
+                <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-zinc-900 dark:border-t-zinc-100" />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
       <p className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl text-foreground">{value}</p>
       <p
         className={`mt-1 inline-flex items-center gap-1 text-[12px] ${
@@ -835,7 +852,7 @@ const domains: Domain[] = [
 
 function Domains() {
   return (
-    <section className="border-t hairline">
+    <section id="domains" className="border-t hairline">
       <div className="mx-auto w-full max-w-[1400px] px-6 py-20 lg:px-10 lg:py-24">
         <div className="mb-10 flex items-end justify-between gap-6">
           <div>
@@ -902,9 +919,6 @@ function DomainCard({ d }: { d: Domain }) {
           </span>
           <h3 className={`text-[17px] font-semibold tracking-tight ${textClass}`}>{d.name}</h3>
         </div>
-        <ArrowUpRight
-          className={`h-4 w-4 opacity-60 transition group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${textClass}`}
-        />
       </div>
 
       <div className="relative mt-6 grid grid-cols-3 gap-3">

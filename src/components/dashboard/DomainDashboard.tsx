@@ -35,7 +35,6 @@ import {
   Database,
   Newspaper,
   Link2,
-  Bell,
   Info,
   type LucideIcon,
 } from "lucide-react";
@@ -46,6 +45,11 @@ import { DOMAIN_LIST } from "@/lib/domains";
 /* =================== METRICS DEFINITIONS & SOURCES =================== */
 const METRIC_TOOLTIPS: Record<string, { desc: string; significance: string; source: string }> = {
   // Economy
+  "composite score": {
+    desc: "A standardized developmental score out of 100 aggregated from all active indicators in this domain.",
+    significance: "Enables direct comparative health assessments across states regardless of size.",
+    source: "Bharat360 Index Calculations"
+  },
   "gdp (nominal)": {
     desc: "Total market value of all finished goods and services produced within a country in current US dollars.",
     significance: "Indicates the absolute size of the national economy on the global stage.",
@@ -263,6 +267,226 @@ const SOURCE_URLS: Record<string, string> = {
   NHA: "https://nha.gov.in"
 };
 
+/* =================== ALL DOMAINS GLOSSARY DATA =================== */
+const GLOSSARY_DATA: Record<
+  DomainSlug,
+  { term: string; definition: string; details: string; formula?: string }[]
+> = {
+  economy: [
+    {
+      term: "GDP (Nominal)",
+      definition: "Total market value of all finished goods and services produced in India.",
+      formula: "GDP = C + I + G + (X - M)",
+      details: "Where C is private consumption, I is gross investment, G is government spending, and (X - M) is net exports."
+    },
+    {
+      term: "GDP Growth",
+      definition: "Annual real rate of change in national economic output.",
+      details: "Adjusted for price changes (inflation) to measure the real speed of national productivity."
+    },
+    {
+      term: "Inflation (CPI)",
+      definition: "Year-on-year rate of change in retail consumer prices.",
+      details: "Tracked using the Consumer Price Index (CPI). RBI aims to keep inflation anchored within a 4% (±2%) band."
+    },
+    {
+      term: "Forex Reserves",
+      definition: "Foreign liquid assets held by the Reserve Bank of India.",
+      details: "Includes currency deposits, gold, SDRs, and IMF positions. Used to defend the Rupee and cushion imports."
+    }
+  ],
+  healthcare: [
+    {
+      term: "Infant Mortality (IMR)",
+      definition: "Deaths of infants under one year of age per 1,000 live births.",
+      details: "A critical indicator of the accessibility and quality of maternal and neonatal healthcare services."
+    },
+    {
+      term: "Life Expectancy",
+      definition: "Average years a newborn is expected to live under current mortality rates.",
+      details: "Reflection of public sanitation, general nutrition standards, disease control, and safety infrastructure."
+    },
+    {
+      term: "Out-of-Pocket Expenditure",
+      definition: "Percentage of total healthcare expenses paid directly by households.",
+      details: "High levels indicate lower financial protection and lack of health insurance coverage for the general public."
+    },
+    {
+      term: "Doctors per Capita",
+      definition: "Number of registered allopathic doctors available per 10,000 population.",
+      details: "Measures workforce supply compared to WHO guidelines (typically 1 doctor per 1,000 population target)."
+    }
+  ],
+  environment: [
+    {
+      term: "Air Quality Index (AQI)",
+      definition: "Standardized metric to report daily ambient air pollution levels.",
+      details: "Calculates concentrations of PM2.5, PM10, ozone, and NO2 into a single danger tier."
+    },
+    {
+      term: "Forest Cover",
+      definition: "Sown or natural tree canopy coverage of national land mass.",
+      details: "NITI Aayog and international bodies set a long-term goal of 33% total area for ecological stability."
+    },
+    {
+      term: "Renewable Share",
+      definition: "Share of electricity capacity generated from green resources.",
+      details: "Calculates output capacity from solar, wind, biomass, and small hydro, excluding fossil fuel systems."
+    },
+    {
+      term: "Carbon Emissions",
+      definition: "Metric tons of Carbon Dioxide (CO2) released per capita.",
+      details: "Tracks the environmental footprint of industrialization and energy usage in relation to net-zero targets."
+    }
+  ],
+  technology: [
+    {
+      term: "Internet Penetration",
+      definition: "Percentage of active broadband or mobile data users.",
+      details: "Measures access to online resources, digital public goods, and digital literacy across rural regions."
+    },
+    {
+      term: "Digital Payments",
+      definition: "Instant transactions processed through UPI and other wallets.",
+      details: "Indicates the level of financial inclusion, formalization, and transition away from a cash economy."
+    },
+    {
+      term: "IT Exports",
+      definition: "Global revenue generated from software and technical service exports.",
+      details: "A core pillar of foreign exchange receipts and high-skill white-collar employment generation in India."
+    },
+    {
+      term: "Unicorn Startups",
+      definition: "Number of private start-up firms valued above $1 Billion.",
+      details: "Signals high venture capital inflows, technology innovation index, and entrepreneurial momentum."
+    }
+  ],
+  education: [
+    {
+      term: "Literacy Rate",
+      definition: "Percentage of citizens aged 7 and above who can read and write.",
+      details: "Baseline benchmark of social progress and accessibility to elementary school operations."
+    },
+    {
+      term: "Pupil-Teacher Ratio",
+      definition: "Average headcount of school students assigned per single teacher.",
+      details: "Lower ratios indicate higher quality instruction, personal attention, and adequate education hiring."
+    },
+    {
+      term: "Gross Enrolment Ratio",
+      definition: "Ratio of official school-age children enrolled in active semesters.",
+      details: "Helps analyze grade retention, school dropout trends, and progression from primary to tertiary programs."
+    },
+    {
+      term: "Public Spend",
+      definition: "Government education expenditure measured as a share of GDP.",
+      details: "Targeted at 6% of GDP under national policy guidelines to guarantee universal, modern school systems."
+    }
+  ],
+  agriculture: [
+    {
+      term: "Foodgrain Production",
+      definition: "Total tonnage of crops (rice, wheat, cereals, pulses) harvested.",
+      details: "Indicates national buffer stock levels, food security index, and agricultural output strength."
+    },
+    {
+      term: "Irrigation Coverage",
+      definition: "Percentage of cropped land area equipped with structured watering systems.",
+      details: "Helps reduce reliance on monsoon rainfall, improving crop yields and double-cropping capabilities."
+    },
+    {
+      term: "Crop Insurance",
+      definition: "Farmer enrollment share under PMFBY weather protection schemes.",
+      details: "Hedges smallholder farmers against sudden rainfall deficits, crop pest infestation, and extreme climate events."
+    },
+    {
+      term: "Fertilizer Intensity",
+      definition: "Average chemical fertilizer consumption rate per hectare of land.",
+      details: "Tracks land productivity inputs and sustainability levels of nutrient and fertilizer applications."
+    }
+  ],
+  safety: [
+    {
+      term: "Crime Rate",
+      definition: "Cognizable offenses registered per 100,000 residents.",
+      details: "Reflects law enforcement reports, security index, and civic safety tracking."
+    },
+    {
+      term: "Cybercrimes",
+      definition: "Offenses committed utilizing computer systems and networks.",
+      details: "Includes online financial scams, phishing attacks, identity theft, and hacking counts."
+    },
+    {
+      term: "Police Strength",
+      definition: "Police personnel deployed per 100,000 citizens.",
+      details: "Indicates policing capacity compared to the UN recommended standard of 222 per lakh citizens."
+    },
+    {
+      term: "Traffic Accident Rate",
+      definition: "Roadway fatalities adjusted per 10,000 vehicles.",
+      details: "Reflects highway design, public vehicle safety regulations, and emergency healthcare response time."
+    }
+  ],
+  governance: [
+    {
+      term: "e-Transaction Volume",
+      definition: "Public transactions completed via digital government websites.",
+      details: "Reflects efficiency, transparency, and access to direct benefit transfers and digital services."
+    },
+    {
+      term: "RTI Resolution Rate",
+      definition: "Percentage of public information requests resolved within 30 days.",
+      details: "A critical measure of accountability, information transparency, and bureaucratic responsiveness."
+    },
+    {
+      term: "Ease of Business",
+      definition: "Ease of doing business index for starting and running local firms.",
+      details: "Tracks regulatory compliance, single-window clearances, tax compliance, and business filings."
+    },
+    {
+      term: "Voter Turnout",
+      definition: "Proportion of registered voters who cast ballots in general elections.",
+      details: "Indicates citizen engagement and democratic participation across states."
+    }
+  ],
+  equality: [
+    {
+      term: "Gini Coefficient",
+      definition: "Statistical dispersion metric of household income inequality.",
+      details: "Values range from 0 (perfect equality) to 1 (absolute inequality, one household holds all wealth)."
+    },
+    {
+      term: "Gender Pay Gap",
+      definition: "Average wage variance between male and female workers.",
+      details: "Measures occupational distribution, access to leadership roles, and equality of wage pay."
+    },
+    {
+      term: "Women in Labor Force",
+      definition: "Female labor force participation rate (LFPR).",
+      details: "Indicates female employment opportunities, safety conditions, and economic inclusion in formal jobs."
+    },
+    {
+      term: "Land Ownership",
+      definition: "Share of operational land holdings owned by female heads.",
+      details: "A major indicator of asset control, agricultural decision-making autonomy, and social security."
+    }
+  ]
+};
+
+/* =================== SEMANTIC SEARCH SYNONYMS =================== */
+const SYNONYMS: Record<string, string[]> = {
+  gdp: ["gdp", "economy", "growth", "income", "output", "production", "nominal", "per capita"],
+  growth: ["gdp growth", "inflation", "trend", "percentage", "rate", "percentile"],
+  forex: ["forex", "foreign exchange", "reserves", "rbi", "currency", "usd", "money"],
+  inflation: ["inflation", "cpi", "consumer price", "prices", "cost of living"],
+  healthcare: ["health", "doctors", "imr", "infant", "medical", "expenditure", "life expectancy"],
+  doctors: ["doctors", "health", "physicians", "hospitals", "medical", "staff"],
+  aqi: ["aqi", "air", "pollution", "environment", "emissions", "carbon", "renewable"],
+  forest: ["forest", "green cover", "trees", "environment", "nature"],
+  internet: ["internet", "digital", "penetration", "tech", "online", "users"],
+  literacy: ["literacy", "education", "schools", "teachers", "pupil", "students"],
+};
+
 function InfoTooltip({ label }: { label: string }) {
   const [showTooltip, setShowTooltip] = useState(false);
   const info = METRIC_TOOLTIPS[label.toLowerCase()];
@@ -341,6 +565,8 @@ function TopBar({
   onFy: (v: string) => void;
 }) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<{ label: string; type: "metric" | "report"; link?: string; sectionId?: string }[]>([]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -361,22 +587,147 @@ function TopBar({
     }
   };
 
+  const handleSearchChange = (val: string) => {
+    setQuery(val);
+    if (!val.trim()) {
+      setResults([]);
+      return;
+    }
+    
+    const searchTerms = val.toLowerCase().split(/\s+/);
+    const matches: typeof results = [];
+    
+    // Check synonyms map
+    const activeKeys = Object.keys(SYNONYMS).filter(key => {
+      return searchTerms.some(term => {
+        if (key.includes(term) || term.includes(key)) return true;
+        return SYNONYMS[key].some(syn => syn.includes(term) || term.includes(syn));
+      });
+    });
+
+    // 1. Match KPIs
+    domain.kpis.forEach(kpi => {
+      const lowerLabel = kpi.label.toLowerCase();
+      const matchesDirect = searchTerms.some(t => lowerLabel.includes(t));
+      const matchesSyn = activeKeys.some(key => lowerLabel.includes(key) || key.includes(lowerLabel));
+      
+      if (matchesDirect || matchesSyn) {
+        matches.push({
+          label: `Metric: ${kpi.label}`,
+          type: "metric",
+          sectionId: "kpi-section"
+        });
+      }
+    });
+
+    // 2. Match related datasets / literature reports
+    domain.related.forEach(rel => {
+      const lowerTitle = rel.title.toLowerCase();
+      const lowerSource = rel.source.toLowerCase();
+      const matchesDirect = searchTerms.some(t => lowerTitle.includes(t) || lowerSource.includes(t));
+      
+      if (matchesDirect) {
+        const cleanSource = rel.source.toUpperCase().trim();
+        const targetUrl = SOURCE_URLS[cleanSource] || "https://www.niti.gov.in";
+        matches.push({
+          label: `${rel.kind}: ${rel.title}`,
+          type: "report",
+          link: targetUrl
+        });
+      }
+    });
+
+    // 3. Fallback matching other sections
+    if (searchTerms.some(t => "map".includes(t) || "state".includes(t) || "performance".includes(t))) {
+      matches.push({
+        label: "Section: State Performance Map",
+        type: "metric",
+        sectionId: "state-map-section"
+      });
+    }
+    if (searchTerms.some(t => "trend".includes(t) || "historical".includes(t) || "timeline".includes(t))) {
+      matches.push({
+        label: "Section: Historical Trend Chart",
+        type: "metric",
+        sectionId: "trend-section"
+      });
+    }
+    if (searchTerms.some(t => "compare".includes(t) || "world".includes(t) || "rank".includes(t))) {
+      matches.push({
+        label: "Section: Country Comparison",
+        type: "metric",
+        sectionId: "comparison-section"
+      });
+    }
+
+    setResults(matches.slice(0, 5));
+  };
+
   return (
     <div className="sticky top-0 z-40 border-b hairline bg-background/70 backdrop-blur-xl no-print">
       <div className="flex h-16 items-center gap-3 px-6">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="chip">Dashboard</span>
-          <h1 className="truncate text-[15px] font-semibold tracking-tight">{domain.name}</h1>
+        <div className="flex min-w-0 items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 text-foreground hover:opacity-90 transition-opacity">
+            <span
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full"
+              style={{ background: "var(--gradient-tiranga)" }}
+            >
+              <span className="h-2.5 w-2.5 rounded-full bg-background" />
+            </span>
+            <span className="text-[15px] font-bold tracking-tight">Bharat360</span>
+          </Link>
+          <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
+          <span className="chip bg-secondary/80 text-muted-foreground font-semibold border-none text-[10.5px] py-0.5 px-2 capitalize">{domain.name}</span>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <div className="hidden items-center gap-2 rounded-full border hairline bg-secondary/60 px-3.5 py-1.5 text-[13px] text-muted-foreground md:flex">
+          <div className="relative hidden items-center gap-2 rounded-full border hairline bg-secondary/60 px-3.5 py-1.5 text-[13px] text-muted-foreground md:flex">
             <Search className="h-3.5 w-3.5" />
             <input
+              value={query}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder={`Search ${domain.name.toLowerCase()} datasets…`}
-              className="w-56 bg-transparent outline-none placeholder:text-muted-foreground/70"
+              className="w-56 bg-transparent outline-none placeholder:text-muted-foreground/70 text-foreground"
             />
             <kbd className="rounded border hairline bg-background px-1.5 py-0.5 text-[10px]">⌘K</kbd>
+
+            {query && (
+              <div className="absolute top-full left-0 mt-2 w-72 rounded-xl border border-zinc-200/50 dark:border-zinc-800/80 bg-white/95 dark:bg-zinc-950/95 p-2 shadow-2xl backdrop-blur-md z-50 text-left">
+                <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-zinc-100 dark:border-zinc-850 mb-1">
+                  Search Matches
+                </div>
+                {results.length > 0 ? (
+                  <ul className="space-y-0.5">
+                    {results.map((r, idx) => (
+                      <li key={idx}>
+                        <button
+                          onClick={() => {
+                            if (r.link) {
+                              window.open(r.link, "_blank", "noopener,noreferrer");
+                            } else if (r.sectionId) {
+                              const el = document.getElementById(r.sectionId);
+                              if (el) {
+                                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                              }
+                            }
+                            setQuery("");
+                            setResults([]);
+                          }}
+                          className="w-full text-left rounded-lg px-2 py-1.5 hover:bg-secondary/60 text-[12.5px] transition-colors flex items-center justify-between text-foreground hover:text-saffron group cursor-pointer"
+                        >
+                          <span className="truncate pr-2 font-medium">{r.label}</span>
+                          <ArrowUpRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-saffron" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="px-2 py-3 text-[12px] text-muted-foreground text-center">
+                    No matching indicators or files found.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="relative">
@@ -398,13 +749,6 @@ function TopBar({
             className="grid h-9 w-9 place-items-center rounded-full border hairline bg-background text-muted-foreground hover:text-foreground cursor-pointer"
           >
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
-
-          <button
-            aria-label="Notifications"
-            className="grid h-9 w-9 place-items-center rounded-full border hairline bg-background text-muted-foreground hover:text-foreground cursor-pointer"
-          >
-            <Bell className="h-4 w-4" />
           </button>
 
           <button 
@@ -803,6 +1147,7 @@ function TrendSection({ domain }: { domain: Domain }) {
 /* =================== STATE MAP (heatmap grid) =================== */
 function StateMapSection({ domain }: { domain: Domain }) {
   const [hover, setHover] = useState<string | null>(null);
+  const [showMethodology, setShowMethodology] = useState(false);
   const max = Math.max(...domain.states.map((s) => s.value));
   const min = Math.min(...domain.states.map((s) => s.value));
   const top = [...domain.states].sort((a, b) => b.value - a.value).slice(0, 5);
@@ -815,7 +1160,18 @@ function StateMapSection({ domain }: { domain: Domain }) {
         <div className="flex flex-wrap items-end justify-between gap-3 border-l-2 border-saffron pl-3.5">
           <div>
             <div className="chip"><MapIcon className="h-3 w-3" /> India — State performance</div>
-            <h2 className="mt-3 font-sans font-bold text-2xl tracking-tight text-foreground">Interactive state map</h2>
+            <div className="flex items-center gap-2 mt-3">
+              <h2 className="font-sans font-bold text-2xl tracking-tight text-foreground">Interactive state map</h2>
+              <div className="group/meth relative flex items-center justify-center">
+                <span className="text-[9.5px] uppercase font-bold tracking-widest text-saffron cursor-help bg-saffron-soft/10 px-2 py-0.5 rounded-full border border-saffron-soft/20">How is composite score calculated?</span>
+                <div className="absolute bottom-full left-1/2 mb-2 w-64 -translate-x-1/2 opacity-0 pointer-events-none group-hover/meth:opacity-100 group-hover/meth:pointer-events-auto transition-opacity z-50">
+                  <div className="rounded-lg bg-zinc-900 dark:bg-zinc-100 p-3 text-left text-[11px] text-zinc-100 dark:text-zinc-900 shadow-xl leading-relaxed">
+                    <strong className="block mb-1">Calculation Method:</strong> Normalized state performance values are aggregated across all active KPIs within this domain and scaled to a maximum cohort baseline of 100.
+                    <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-zinc-900 dark:border-t-zinc-100" />
+                  </div>
+                </div>
+              </div>
+            </div>
             <p className="mt-1 text-[13px] text-muted-foreground">
               Hover a state tile to see its {domain.name.toLowerCase()} score.
             </p>
@@ -868,7 +1224,9 @@ function StateMapSection({ domain }: { domain: Domain }) {
             <div className="mt-2 font-sans font-extrabold text-5xl tracking-tight" style={{ color: "var(--saffron)" }}>
               {selected.value}
             </div>
-            <div className="text-[12px] text-muted-foreground">Composite score</div>
+            <div className="mt-2">
+              <div className="text-[12px] text-muted-foreground">Composite score</div>
+            </div>
           </>
         ) : (
           <>
@@ -896,6 +1254,21 @@ function StateMapSection({ domain }: { domain: Domain }) {
                     </li>
                   ))}
                 </ul>
+              </div>
+
+              <div className="mt-2 pt-4 border-t border-zinc-200/50 dark:border-zinc-800/50">
+                <button
+                  onClick={() => setShowMethodology(!showMethodology)}
+                  className="text-[10.5px] text-saffron hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                >
+                  {showMethodology ? "Hide calculation method" : "How is composite score calculated?"}
+                </button>
+                
+                {showMethodology && (
+                  <div className="mt-3 p-3 rounded-lg border border-zinc-200/50 dark:border-zinc-800 bg-secondary/30 text-[11px] leading-relaxed text-muted-foreground animate-in fade-in slide-in-from-top-1">
+                    <strong className="text-foreground">Calculation Method:</strong> Normalized state performance values are aggregated across all active KPIs within this domain and scaled to a maximum cohort baseline of 100.
+                  </div>
+                )}
               </div>
             </div>
           </>
@@ -1015,17 +1388,14 @@ const KIND_ICON: Record<string, LucideIcon> = {
 };
 function ExploreSection({ domain }: { domain: Domain }) {
   return (
-    <section>
-      <div className="flex items-end justify-between border-l-2 border-saffron pl-3.5">
-        <div>
-          <div className="chip">Continue exploring</div>
-          <h2 className="mt-3 font-sans font-bold text-2xl tracking-tight text-foreground">Related datasets &amp; reads</h2>
-        </div>
+    <section className="card-surface p-6">
+      <div className="flex items-center gap-2 border-l-2 border-saffron pl-3.5 mb-4">
+        <span className="chip">Related Datasets &amp; Reads</span>
+        <h2 className="text-xl font-bold text-foreground">Official Portals &amp; Literature</h2>
       </div>
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {domain.related.map((r, i) => {
+      <div className="divide-y divide-zinc-200/50 dark:divide-zinc-800/50">
+        {domain.related.map((r, idx) => {
           const Icon = KIND_ICON[r.kind] ?? FileText;
-          // Resolve target URL
           const cleanSource = r.source.toUpperCase().trim();
           const targetUrl = SOURCE_URLS[cleanSource] || "https://www.niti.gov.in";
           
@@ -1035,26 +1405,28 @@ function ExploreSection({ domain }: { domain: Domain }) {
               href={targetUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={`bento bento-hover flex flex-col justify-between transition hover:-translate-y-1 hover:shadow-lg cursor-pointer border border-zinc-200/50 dark:border-zinc-800/80 bg-surface/40 hover:bg-surface/75 group ${
-                i === 0 ? "sm:col-span-2 lg:col-span-2 lg:row-span-1" : ""
+              className={`flex flex-col sm:flex-row sm:items-center justify-between py-3.5 px-3 rounded-lg transition-colors group cursor-pointer ${
+                idx % 2 === 0 ? "bg-[#fffdfa] dark:bg-saffron-soft/5" : "bg-transparent hover:bg-secondary/40"
               }`}
             >
-              <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                <span className="flex items-center gap-2">
-                  <Icon className="h-3.5 w-3.5 text-saffron" /> {r.kind}
-                </span>
-                <span className="rounded-full bg-saffron-soft/30 dark:bg-saffron-soft/10 px-2 py-0.5 text-[9px] font-semibold text-saffron">
-                  {r.source}
-                </span>
+              <div className="flex items-start sm:items-center gap-3">
+                <div className="p-2 bg-saffron-soft/10 rounded-lg text-saffron shrink-0">
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-[14px] font-semibold text-foreground group-hover:text-saffron transition-colors">
+                    {r.title}
+                  </h3>
+                  <span className="text-[12px] text-muted-foreground">Source: {r.source}</span>
+                </div>
               </div>
-              <div className="mt-6">
-                <h3 className="font-sans font-bold text-xl leading-tight tracking-tight text-foreground group-hover:text-saffron transition-colors">
-                  {r.title}
-                </h3>
-                <div className="mt-2 text-[12.5px] text-muted-foreground font-medium">via {r.source}</div>
-              </div>
-              <div className="mt-6 inline-flex items-center gap-1.5 text-[13px] font-semibold text-saffron group-hover:underline">
-                Open Report <ExternalLink className="h-3.5 w-3.5" />
+              <div className="mt-2 sm:mt-0 flex items-center gap-3 self-end sm:self-auto">
+                <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  {r.kind}
+                </span>
+                <span className="text-[12px] font-bold text-saffron group-hover:underline inline-flex items-center gap-1">
+                  Open <ExternalLink className="h-3 w-3" />
+                </span>
               </div>
             </a>
           );
@@ -1068,35 +1440,29 @@ function ExploreSection({ domain }: { domain: Domain }) {
 function SourcesSection({ domain }: { domain: Domain }) {
   return (
     <section className="card-surface p-6 bg-zinc-50/60 dark:bg-zinc-950/20 border-zinc-200/50">
-      <div className="flex items-center gap-2 border-l-2 border-green pl-3.5">
+      <div className="flex items-center gap-2 border-l-2 border-green pl-3.5 mb-4">
         <span className="chip bg-green-soft/20 text-green border border-green-soft/50">Sources</span>
         <span className="text-[12px] text-muted-foreground font-medium">All data below is aggregated from public and international agencies.</span>
       </div>
-      <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="flex flex-wrap gap-2.5 mt-4">
         {domain.sources.map((s) => {
           const rawUrl = s.url.toLowerCase();
           const href = rawUrl.startsWith("http") ? s.url : `https://${s.url}`;
           return (
-            <li key={s.name}>
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between rounded-xl border border-zinc-200/50 dark:border-zinc-800/80 bg-surface/50 hover:bg-secondary/40 px-3.5 py-3 transition hover:-translate-y-0.5 hover:shadow-sm group cursor-pointer"
-              >
-                <div className="min-w-0">
-                  <div className="truncate text-[13px] font-semibold text-foreground group-hover:text-saffron transition-colors">{s.name}</div>
-                  <div className="truncate text-[11px] text-muted-foreground group-hover:underline">{s.url}</div>
-                </div>
-                <div className="ml-2 flex items-center gap-2 shrink-0">
-                  <span className="text-[10px] bg-secondary px-2 py-0.5 rounded text-muted-foreground">{s.updated}</span>
-                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-saffron transition-colors" />
-                </div>
-              </a>
-            </li>
+            <a
+              key={s.name}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-background hover:bg-secondary/60 px-4 py-2 text-[12.5px] font-semibold text-foreground hover:text-saffron transition-all cursor-pointer shadow-sm"
+            >
+              <span>{s.name}</span>
+              <span className="text-[10px] text-muted-foreground bg-secondary px-2 py-0.5 rounded-full border hairline">{s.updated}</span>
+              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-saffron shrink-0" />
+            </a>
           );
         })}
-      </ul>
+      </div>
     </section>
   );
 }
@@ -1104,6 +1470,74 @@ function SourcesSection({ domain }: { domain: Domain }) {
 /* =================== TEMPLATE =================== */
 export function DomainDashboard({ domain }: { domain: Domain }) {
   const [fy, setFy] = useState(YEARS[YEARS.length - 1]);
+
+  // Scaled domain data based on FY selection
+  const activeDomainData = useMemo(() => {
+    const cloned = JSON.parse(JSON.stringify(domain)) as Domain;
+    const yearIndex = YEARS.indexOf(fy); 
+    if (yearIndex === -1 || yearIndex === YEARS.length - 1) return cloned;
+    
+    // Multiplier for nominal scaling: FY20-21 = 0.76, FY21-22 = 0.82, FY22-23 = 0.88, FY23-24 = 0.94, FY24-25 = 1.00
+    const multiplier = 0.76 + (yearIndex / 4) * 0.24; 
+    
+    // Scale KPIs values
+    cloned.kpis = cloned.kpis.map((kpi) => {
+      const cleaned = kpi.value.replace(/[^0-9.-]/g, "");
+      const raw = parseFloat(cleaned);
+      if (isNaN(raw)) return kpi;
+
+      let newVal = raw;
+      if (kpi.value.includes("%")) {
+        newVal = raw - (4 - yearIndex) * 0.45;
+        kpi.value = `${newVal.toFixed(1)}%`;
+      } else if (kpi.value.includes("#")) {
+        const rankVal = parseInt(cleaned, 10);
+        newVal = rankVal + (4 - yearIndex);
+        kpi.value = `#${Math.max(1, Math.round(newVal))}`;
+      } else {
+        newVal = raw * multiplier;
+        if (kpi.value.includes("$")) {
+          const suffix = kpi.value.endsWith("T") ? "T" : kpi.value.endsWith("B") ? "B" : "";
+          kpi.value = `$${newVal.toFixed(1)}${suffix}`;
+        } else {
+          const suffix = kpi.value.replace(/[0-9.-]/g, "");
+          kpi.value = `${newVal.toFixed(1)}${suffix}`;
+        }
+      }
+      return kpi;
+    });
+
+    // Scale rankings values
+    cloned.rankings = cloned.rankings.map((r) => {
+      const cleaned = r.value.replace(/[^0-9.-]/g, "");
+      const rawVal = parseFloat(cleaned);
+      if (!isNaN(rawVal)) {
+        let newVal = rawVal * multiplier;
+        if (r.value.includes("%")) {
+          newVal = rawVal - (4 - yearIndex) * 0.55;
+          r.value = `${newVal.toFixed(1)}%`;
+        } else {
+          const suffix = r.value.replace(/[0-9.-]/g, "");
+          r.value = `${newVal.toFixed(1)}${suffix}`;
+        }
+      }
+      return r;
+    });
+
+    // Scale top countries values
+    cloned.topCountries = cloned.topCountries.map((c) => {
+      c.value = Math.round((c.value * multiplier) * 10) / 10;
+      return c;
+    });
+
+    // Scale states performance values
+    cloned.states = cloned.states.map((s) => {
+      s.value = Math.round((s.value * multiplier) * 10) / 10;
+      return s;
+    });
+
+    return cloned;
+  }, [domain, fy]);
 
   return (
     <>
@@ -1143,7 +1577,7 @@ export function DomainDashboard({ domain }: { domain: Domain }) {
           }
         }
       `}} />
-      <TopBar domain={domain} fy={fy} onFy={setFy} />
+      <TopBar domain={activeDomainData} fy={fy} onFy={setFy} />
       <main className="mx-auto w-full max-w-[1400px] space-y-6 px-6 py-8">
         <header className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:flex-wrap sm:justify-between border-b border-zinc-200/40 dark:border-zinc-800/40 pb-5">
           <div className="min-w-0">
@@ -1169,45 +1603,53 @@ export function DomainDashboard({ domain }: { domain: Domain }) {
           </div>
         </header>
 
-        <KPISection domain={domain} />
+        <div id="kpi-section">
+          <KPISection domain={activeDomainData} />
+        </div>
         
-        {/* Economy Domain Indicators Glossary directly on screen */}
-        {domain.slug === "economy" && (
-          <section className="card-surface p-6 bg-gradient-to-r from-saffron-soft/10 via-background to-orange-50/10 border border-saffron-soft/30 rounded-[var(--radius-2xl)]">
+        {/* Dynamic On-Screen Indicators Glossary for ALL domains */}
+        {GLOSSARY_DATA[domain.slug] && (
+          <section id="glossary-section" className="card-surface p-6 bg-gradient-to-r from-saffron-soft/10 via-background to-orange-50/10 border border-saffron-soft/30 rounded-[var(--radius-2xl)]">
             <div className="flex items-center gap-2 border-l-2 border-saffron pl-3.5 mb-4">
               <span className="chip bg-saffron-soft/20 text-saffron border border-saffron-soft/50">Indicator Glossary</span>
-              <h2 className="text-xl font-bold text-foreground">Understanding Economy Metrics &amp; Calculations</h2>
+              <h2 className="text-xl font-bold text-foreground">Understanding {domain.name} Metrics &amp; Calculations</h2>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <div className="space-y-2">
-                <h3 className="font-semibold text-foreground text-[14px]">GDP (Nominal) vs GDP Growth</h3>
-                <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-                  <strong>GDP (Nominal)</strong> measures the raw economic size of India in current US dollars. It is calculated by aggregating consumption, capital investment, government spending, and net trade balance:
-                  <span className="block my-1.5 p-2 bg-secondary/50 rounded font-mono text-[11px] text-foreground">
-                    GDP = C + I + G + (X - M)
-                  </span>
-                  Where <strong>C</strong> is private consumption, <strong>I</strong> is gross investment, <strong>G</strong> is government spending, and <strong>(X - M)</strong> is net exports (Exports minus Imports). <strong>GDP Growth</strong> measures the inflation-adjusted real output change year-over-year.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold text-foreground text-[14px]">Inflation (CPI) &amp; Forex Reserves</h3>
-                <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-                  <strong>Inflation</strong> tracks changes in purchasing power using the Consumer Price Index (CPI), analyzing retail price adjustments of commodities, energy, and services. The Reserve Bank of India (RBI) implements monetary policy to keep CPI inflation anchored within a 4% (±2%) target band.
-                  <br />
-                  <strong>Foreign Exchange (Forex) Reserves</strong> are international assets held by the central bank (RBI), including foreign currency assets, reserves, gold, and IMF Special Drawing Rights. They cushion exchange rate volatility and guarantee import covers.
-                </p>
-              </div>
+              {GLOSSARY_DATA[domain.slug].map((g, idx) => (
+                <div key={idx} className="space-y-2">
+                  <h3 className="font-semibold text-foreground text-[14.5px]">{g.term}</h3>
+                  <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+                    <strong>{g.term}</strong> {g.definition.toLowerCase()}
+                    {g.formula && (
+                      <span className="block my-1.5 p-2 bg-secondary/50 rounded font-mono text-[11px] text-foreground">
+                        {g.formula}
+                      </span>
+                    )}
+                    <br />
+                    {g.details}
+                  </p>
+                </div>
+              ))}
             </div>
           </section>
         )}
 
-        <RankingSection domain={domain} />
-        <ComparisonSection domain={domain} />
-        <TrendSection domain={domain} />
-        <StateMapSection domain={domain} />
-        <StorySection domain={domain} />
-        <ExploreSection domain={domain} />
-        <SourcesSection domain={domain} />
+        <div id="ranking-section">
+          <RankingSection domain={activeDomainData} />
+        </div>
+        <div id="comparison-section">
+          <ComparisonSection domain={activeDomainData} />
+        </div>
+        <div id="trend-section">
+          <TrendSection domain={activeDomainData} />
+        </div>
+        <div id="state-map-section">
+          <StateMapSection domain={activeDomainData} />
+        </div>
+        
+        <StorySection domain={activeDomainData} />
+        <ExploreSection domain={activeDomainData} />
+        <SourcesSection domain={activeDomainData} />
 
         <div className="pt-4 pb-8 text-center text-[11px] text-muted-foreground border-t border-zinc-250/20 dark:border-zinc-800/20 no-print">
           Bharat360 · Data updated {domain.sources[0]?.updated ?? "recently"} · Made with care

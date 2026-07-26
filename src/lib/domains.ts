@@ -31,6 +31,13 @@ export type KPI = {
   spark: number[];
 };
 
+export type Ranking = {
+  label: string;
+  value: string;
+  source?: string;
+  tooltip?: string;
+};
+
 export type Domain = {
   slug: DomainSlug;
   name: string;
@@ -41,6 +48,7 @@ export type Domain = {
   outOf: number;
   rankDelta: number;
   kpis: KPI[];
+  rankings: Ranking[]; 
   trend: { year: number; india: number; world: number }[];
   topCountries: { code: string; name: string; value: number }[];
   states: { code: string; name: string; value: number }[];
@@ -111,6 +119,13 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
       { label: "Inflation", value: "4.9%", delta: "-0.6 pp", trend: "down", hint: "Within RBI band", spark: spark(3) },
       { label: "Forex Reserves", value: "$652B", delta: "+$18B", trend: "up", hint: "4th globally", spark: spark(4) },
     ],
+
+    rankings: [
+  { label: "Global GDP Rank", value: "#5" },
+  { label: "Ease of Doing Business", value: "#63" },
+  { label: "Global Competitiveness", value: "#40" },
+  { label: "Economic Freedom", value: "#84" },
+],
     trend: trend(60, 2.2),
     topCountries: [
       { code: "US", name: "United States", value: 27.72 },
@@ -165,6 +180,14 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
       { label: "Infant Mortality", value: "26.6", delta: "-3.2", trend: "down", hint: "per 1,000 births", spark: spark(7) },
       { label: "Ayushman Coverage", value: "550M", delta: "+72M", trend: "up", hint: "Beneficiaries", spark: spark(8) },
     ],
+
+    rankings: [
+  { label: "Healthcare Index", value: "#112" },
+  { label: "Life Expectancy Rank", value: "#125" },
+  { label: "Universal Health Coverage", value: "61%" },
+  { label: "Infant Mortality Rank", value: "#108" },
+],
+
     trend: trend(58, 1.1, 8),
     topCountries: [
       { code: "JP", name: "Japan", value: 84.6 },
@@ -218,6 +241,15 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
       { label: "CO₂ per capita", value: "1.9 t", delta: "+0.1", trend: "up", hint: "1/8th of US", spark: spark(11) },
       { label: "EV Sales Share", value: "7.4%", delta: "+3.1 pp", trend: "up", hint: "2W dominant", spark: spark(12) },
     ],
+
+    rankings: [
+  { label: "Environmental Performance Index", value: "#128" },
+  { label: "Climate Change Performance", value: "#7" },
+  { label: "Renewable Energy Rank", value: "#4" },
+  { label: "Forest Cover", value: "24.6%" },
+],
+
+
     trend: trend(35, 1.8),
     topCountries: [
       { code: "SE", name: "Sweden", value: 78 },
@@ -270,6 +302,12 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
       { label: "Unicorns", value: "118", delta: "+6", trend: "up", hint: "3rd globally", spark: spark(15) },
       { label: "R&D / GDP", value: "0.7%", delta: "+0.05", trend: "up", hint: "Target: 2%", spark: spark(16) },
     ],
+    rankings: [
+  { label: "Global Innovation Index", value: "#39" },
+  { label: "Network Readiness Index", value: "#49" },
+  { label: "AI Readiness Index", value: "#36" },
+  { label: "Startup Ecosystem Rank", value: "#3" },
+],
     trend: trend(45, 3.4),
     topCountries: [
       { code: "US", name: "United States", value: 92 },
@@ -322,6 +360,14 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
       { label: "Female Enrolment", value: "48.9%", delta: "+2.1 pp", trend: "up", hint: "Near parity", spark: spark(19) },
       { label: "Ed Spend / GDP", value: "2.9%", delta: "+0.1 pp", trend: "up", hint: "Target: 6%", spark: spark(20) },
     ],
+
+    rankings: [
+  { label: "Education Index", value: "#94" },
+  { label: "Literacy Rate", value: "77.7%" },
+  { label: "Higher Education Rank", value: "#29" },
+  { label: "University Quality", value: "#52" },
+],
+
     trend: trend(52, 1.5),
     topCountries: [
       { code: "FI", name: "Finland", value: 88 },
@@ -374,6 +420,14 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
       { label: "Irrigated Area", value: "52%", delta: "+1.8 pp", trend: "up", hint: "of net sown", spark: spark(23) },
       { label: "Farmer Income", value: "₹13,661", delta: "+11%", trend: "up", hint: "Monthly avg", spark: spark(24) },
     ],
+
+    rankings: [
+  { label: "Food Production Rank", value: "#2" },
+  { label: "Agricultural Output", value: "#2" },
+  { label: "Food Security Index", value: "#68" },
+  { label: "Agri Exports", value: "$48.9B" },
+],
+
     trend: trend(48, 1.9),
     topCountries: [
       { code: "CN", name: "China", value: 95 },
@@ -425,6 +479,14 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
       { label: "Disaster Response", value: "94%", delta: "+3 pp", trend: "up", hint: "NDRF reach", spark: spark(27) },
       { label: "Women Safety Score", value: "62.1", delta: "+1.8", trend: "up", hint: "Composite index", spark: spark(28) },
     ],
+
+    rankings: [
+  { label: "Global Peace Index", value: "#116" },
+  { label: "Safety Index", value: "#76" },
+  { label: "Disaster Preparedness", value: "94%" },
+  { label: "Road Safety Rank", value: "#121" },
+],
+
     trend: trend(50, 1.2),
     topCountries: [
       { code: "IS", name: "Iceland", value: 93 },
@@ -476,6 +538,14 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
       { label: "Corruption Perceptions", value: "39/100", delta: "+2", trend: "up", hint: "Higher = cleaner", spark: spark(31) },
       { label: "Voter Turnout", value: "66.8%", delta: "+0.4 pp", trend: "up", hint: "GE 2024", spark: spark(32) },
     ],
+
+    rankings: [
+  { label: "Rule of Law Index", value: "#79" },
+  { label: "Corruption Perception", value: "#96" },
+  { label: "Government Effectiveness", value: "#85" },
+  { label: "Digital Governance", value: "#28" },
+],
+
     trend: trend(46, 1.4),
     topCountries: [
       { code: "DK", name: "Denmark", value: 90 },
@@ -527,6 +597,13 @@ export const DOMAINS: Record<DomainSlug, Domain> = {
       { label: "Women in Parliament", value: "13.6%", delta: "+0.3 pp", trend: "up", hint: "17th Lok Sabha", spark: spark(35) },
       { label: "SC/ST Rep in Higher Ed", value: "23%", delta: "+1.5 pp", trend: "up", hint: "AISHE", spark: spark(36) },
     ],
+    rankings: [
+  { label: "Global Gender Gap Rank", value: "#129" },
+  { label: "Gender Equality Score", value: "64.1%" },
+  { label: "Women in Parliament", value: "13.6%" },
+  { label: "Income Equality Rank", value: "#103" },
+],
+
     trend: trend(40, 1.1),
     topCountries: [
       { code: "IS", name: "Iceland", value: 91 },
